@@ -1,133 +1,62 @@
-import { TRACK_OUTER, TRACK_INNER, PORTAL_SIZE } from "./constants.js";
+import { WIDTH, HEIGHT, TRACK } from "./constants.js";
 
 export class Track {
   constructor() {
-    this.outer = TRACK_OUTER;
-    this.inner = TRACK_INNER;
+    this.outer = {
+      x: TRACK.outerMargin,
+      y: TRACK.outerMargin,
+      w: WIDTH - TRACK.outerMargin * 2,
+      h: HEIGHT - TRACK.outerMargin * 2
+    };
 
-    this.leftPortal = {
+    this.inner = {
+      x: TRACK.innerMargin,
+      y: TRACK.innerMargin,
+      w: WIDTH - TRACK.innerMargin * 2,
+      h: HEIGHT - TRACK.innerMargin * 2
+    };
+
+    this.portalLeft = {
       x: this.outer.x,
-      y: this.outer.y + this.outer.h / 2 - PORTAL_SIZE / 2
+      y: HEIGHT / 2 - 40,
+      w: 12,
+      h: 80
     };
 
-    this.rightPortal = {
-      x: this.outer.x + this.outer.w,
-      y: this.leftPortal.y
+    this.portalRight = {
+      x: this.outer.x + this.outer.w - 12,
+      y: HEIGHT / 2 - 40,
+      w: 12,
+      h: 80
     };
 
-    this.lapLine = {
-      x: this.outer.x + 5,
-      y: this.outer.y + this.outer.h / 2,
-      w: 30,
-      h: 6
-    };
+    this.lapLineX = this.outer.x + 40;
   }
 
   draw(ctx) {
-    ctx.strokeStyle = "#4cff4c";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#00ff88";
+    ctx.lineWidth = TRACK.wallThickness;
 
-    ctx.strokeRect(
-      this.outer.x,
-      this.outer.y,
-      this.outer.w,
-      this.outer.h
-    );
+    ctx.strokeRect(this.outer.x, this.outer.y, this.outer.w, this.outer.h);
+    ctx.strokeRect(this.inner.x, this.inner.y, this.inner.w, this.inner.h);
 
-    ctx.strokeRect(
-      this.inner.x,
-      this.inner.y,
-      this.inner.w,
-      this.inner.h
-    );
+    ctx.strokeStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(this.lapLineX, this.outer.y);
+    ctx.lineTo(this.lapLineX, this.outer.y + 40);
+    ctx.stroke();
 
-    // portals
     ctx.fillStyle = "purple";
-    ctx.fillRect(this.leftPortal.x - 6, this.leftPortal.y, 6, PORTAL_SIZE);
-    ctx.fillRect(this.rightPortal.x, this.rightPortal.y, 6, PORTAL_SIZE);
-
-    // lap line
-    ctx.fillStyle = "white";
-    ctx.fillRect(
-      this.lapLine.x,
-      this.lapLine.y,
-      this.lapLine.w,
-      this.lapLine.h
-    );
+    ctx.fillRect(this.portalLeft.x, this.portalLeft.y, this.portalLeft.w, this.portalLeft.h);
+    ctx.fillRect(this.portalRight.x, this.portalRight.y, this.portalRight.w, this.portalRight.h);
   }
 
-  insideOuter(x, y, r) {
+  rectContains(rect, x, y, r = 0) {
     return (
-      x - r > this.outer.x &&
-      x + r < this.outer.x + this.outer.w &&
-      y - r > this.outer.y &&
-      y + r < this.outer.y + this.outer.h
+      x + r > rect.x &&
+      x - r < rect.x + rect.w &&
+      y + r > rect.y &&
+      y - r < rect.y + rect.h
     );
-  }
-
-  insideInner(x, y, r) {
-    return (
-      x + r > this.inner.x &&
-      x - r < this.inner.x + this.inner.w &&
-      y + r > this.inner.y &&
-      y - r < this.inner.y + this.inner.h
-    );
-  }
-
-  handleBounce(obj) {
-    if (!this.insideOuter(obj.x, obj.y, obj.radius)) {
-      if (obj.x < this.outer.x || obj.x > this.outer.x + this.outer.w)
-        obj.vx *= -0.7;
-      if (obj.y < this.outer.y || obj.y > this.outer.y + this.outer.h)
-        obj.vy *= -0.7;
-    }
-
-    if (this.insideInner(obj.x, obj.y, obj.radius)) {
-      if (
-        obj.x > this.inner.x &&
-        obj.x < this.inner.x + this.inner.w
-      )
-        obj.vy *= -0.7;
-
-      if (
-        obj.y > this.inner.y &&
-        obj.y < this.inner.y + this.inner.h
-      )
-        obj.vx *= -0.7;
-    }
-  }
-
-  tryPortal(player) {
-    if (player.portalCooldown > 0) return;
-
-    const p = player;
-
-    if (
-      p.x < this.leftPortal.x &&
-      p.y > this.leftPortal.y &&
-      p.y < this.leftPortal.y + PORTAL_SIZE
-    ) {
-      p.x = this.rightPortal.x - 20;
-      p.portalCooldown = 40;
-    }
-
-    if (
-      p.x > this.rightPortal.x &&
-      p.y > this.rightPortal.y &&
-      p.y < this.rightPortal.y + PORTAL_SIZE
-    ) {
-      p.x = this.leftPortal.x + 20;
-      p.portalCooldown = 40;
-    }
-  }
-
-  checkLap(player) {
-    if (
-      player.x > this.lapLine.x &&
-      player.x < this.lapLine.x + this.lapLine.w &&
-      Math.abs(player.vx) > 0.5
-    ) {
-      player.laps++;
-    }
   }
 }

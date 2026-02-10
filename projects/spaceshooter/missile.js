@@ -1,21 +1,17 @@
 export class Missile {
-  constructor(x, y, angle, owner) {
-    this.x = x;
-    this.y = y;
-    this.vx = Math.cos(angle) * 6;
-    this.vy = Math.sin(angle) * 6;
-
-    this.radius = 3;
-    this.owner = owner;
-    this.life = 200;
+  constructor(player) {
+    this.x = player.x;
+    this.y = player.y;
+    this.vx = Math.cos(player.angle) * 6 + player.vx;
+    this.vy = Math.sin(player.angle) * 6 + player.vy;
+    this.life = 180;
+    this.radius = 4;
+    this.owner = player;
   }
 
-  update(track) {
+  update() {
     this.x += this.vx;
     this.y += this.vy;
-
-    track.handleBounce(this);
-
     this.life--;
   }
 
