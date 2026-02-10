@@ -40,3 +40,15 @@ function loop(now) {
 }
 
 requestAnimationFrame(loop);
+
+// Fullscreen toggle for embedded canvas (if a button is present)
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener("click", () => {
+    if (!document.fullscreenElement) {
+      canvas.requestFullscreen().catch((err) => console.error(err));
+    } else {
+      document.exitFullscreen();
+    }
+  });
+}
