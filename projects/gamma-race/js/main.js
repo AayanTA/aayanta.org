@@ -4,8 +4,24 @@ import { Player } from "./player.js";
 import { Game } from "./game.js";
 
 const canvas = document.querySelector("canvas");
+const container = canvas.parentElement;
+
+// Set canvas to scale responsively while maintaining aspect ratio
+function resizeCanvas() {
+  const rect = container.getBoundingClientRect();
+  const containerWidth = container.clientWidth - 32; // Account for padding
+  const scale = containerWidth / WIDTH;
+  
+  canvas.style.width = containerWidth + "px";
+  canvas.style.height = (HEIGHT * scale) + "px";
+}
+
+// Set internal resolution
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
+resizeCanvas();
+
+window.addEventListener("resize", resizeCanvas);
 
 const ctx = canvas.getContext("2d");
 
@@ -41,12 +57,13 @@ function loop(now) {
 
 requestAnimationFrame(loop);
 
-// Fullscreen toggle for embedded canvas (if a button is present)
+// Fullscreen toggle
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 if (fullscreenBtn) {
   fullscreenBtn.addEventListener("click", () => {
+    const container = canvas.parentElement;
     if (!document.fullscreenElement) {
-      canvas.requestFullscreen().catch((err) => console.error(err));
+      container.requestFullscreen().catch((err) => console.error("Fullscreen error:", err));
     } else {
       document.exitFullscreen();
     }
