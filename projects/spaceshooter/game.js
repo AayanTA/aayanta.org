@@ -1,110 +1,93 @@
 import { Player } from "./player.js";
 import { Missile } from "./missile.js";
-import { WIDTH, HEIGHT, PLAYER_RADIUS } from "./constants.js";
-import { walls, portals, finishLines } from "./track.js";
-
-function rectCircle(rect, cx, cy, r) {
-  const x = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
-  const y = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
-  return (cx - x) ** 2 + (cy - y) ** 2 < r ** 2;
-}
+import { Track } from "./track.js";
+import { WIDTH, HEIGHT, MAX_LAPS } from "./constants.js";
 
 export class Game {
   constructor(ctx, keys) {
     this.ctx = ctx;
     this.keys = keys;
 
+    this.track = new Track();
+
     this.players = [
-      new Player(200, 300, "lime", {
-        left: "a",
-        right: "d",
-        thrust: "w",
-        fire: "Control"
+      new Player(150, HEIGHT / 2, "cyan", {
+        left: "KeyA",
+        right: "KeyD",
+        thrust: "KeyW"
       }),
-      new Player(800, 300, "cyan", {
+      new Player(WIDTH - 150, HEIGHT / 2, "red", {
         left: "ArrowLeft",
         right: "ArrowRight",
-        thrust: "ArrowUp",
-        fire: "Enter"
+        thrust: "ArrowUp"
       })
     ];
 
     this.missiles = [];
-    this.lapLock = new Map();
-    this.players.forEach(p => this.lapLock.set(p, false));
-  }
-
-  update() {
-    for (const p of this.players) {
-      p.update(this.keys);
-
-      for (const wall of walls) {
-        if (rectCircle(wall, p.x, p.y, PLAYER_RADIUS)) {
-          p.x -= p.vx;
-          p.y -= p.vy;
-          p.vx *= -0.5;
-          p.vy *= -0.5;
-        }
-      }
-
-      for (const portal of portals) {
-        if (rectCircle(portal, p.x, p.y, PLAYER_RADIUS)) {
-          p.x = portal.targetX;
-        }
-      }
-
-      const line = p === this.players[0] ? finishLines.p1 : finishLines.p2;
-      if (rectCircle(line, p.x, p.y, PLAYER_RADIUS)) {
-        if (!this.lapLock.get(p)) {
-          p.score++;
-          this.lapLock.set(p, true);
-        }
-      } else {
-        this.lapLock.set(p, false);
-      }
-    }
-
-    for (const m of this.missiles) {
-      m.update();
-
-      for (const portal of portals) {
-        if (rectCircle(portal, m.x, m.y, 4)) {
-          m.x = portal.targetX;
-        }
-      }
-
-      for (const p of this.players) {
-        if (p !== m.owner && Math.hypot(p.x - m.x, p.y - m.y) < PLAYER_RADIUS) {
-          p.stun();
-          m.active = false;
-        }
-      }
-    }
-
-    this.missiles = this.missiles.filter(m => m.active);
-  }
-
-  draw() {
-    this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-    this.ctx.fillStyle = "white";
-    for (const w of walls) this.ctx.fillRect(w.x, w.y, w.w, w.h);
-
-    this.ctx.fillStyle = "purple";
-    for (const p of portals) this.ctx.fillRect(p.x, p.y, p.w, p.h);
-
-    for (const m of this.missiles) m.draw(this.ctx);
-    for (const p of this.players) p.draw(this.ctx);
-
-    this.ctx.fillStyle = "white";
-    this.ctx.font = "20px monospace";
-    this.ctx.fillText(`P1: ${this.players[0].score}`, 30, 30);
-    this.ctx.fillText(`P2: ${this.players[1].score}`, 880, 30);
   }
 
   fire(player) {
+    if (player.stun > 0) return;
+
     this.missiles.push(
-      new Missile(player.x, player.y, player.angle, player)
+      new Missile(
+        player.x + Math.cos(player.angle) * 16,
+        player.y + Math.sin(player.angle) * 16,
+        player.angle,
+        player
+      )
+    );
+  }
+
+  update() {
+    this.players.forEach(p => {
+      p.update(this.keys);
+
+      this.track.handleBounce(p);
+      this.track.tryPortal(p);
+      this.track.checkLap(p);
+    });
+
+    this.missiles.forEach(m => {
+      m.update(this.track);
+
+      this.players.forEach(p => {
+        if (p !== m.owner) {
+          const dx = p.x - m.x;
+          const dy = p.y - m.y;
+
+          if (Math.hypot(dx, dy) < p.radius) {
+            p.stun = 60;
+            m.life = 0;
+          }
+        }
+      });
+    });
+
+    this.missiles = this.missiles.filter(m => m.life > 0);
+  }
+
+  draw() {
+    const ctx = this.ctx;
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    this.track.draw(ctx);
+
+    this.players.forEach(p => p.draw(ctx));
+    this.missiles.forEach(m => m.draw(ctx));
+
+    ctx.fillStyle = "white";
+    ctx.fillText(
+      `P1: ${this.players[0].laps}`,
+      60,
+      25
+    );
+    ctx.fillText(
+      `P2: ${this.players[1].laps}`,
+      WIDTH - 100,
+      25
     );
   }
 }

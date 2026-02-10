@@ -1,23 +1,133 @@
-export const walls = [
-  // Outer walls
-  { x: 0, y: 0, w: 1000, h: 20 },
-  { x: 0, y: 580, w: 1000, h: 20 },
-  { x: 0, y: 0, w: 20, h: 600 },
-  { x: 980, y: 0, w: 20, h: 600 },
+import { TRACK_OUTER, TRACK_INNER, PORTAL_SIZE } from "./constants.js";
 
-  // Inner circuit
-  { x: 250, y: 140, w: 500, h: 10 },
-  { x: 250, y: 450, w: 500, h: 10 },
-  { x: 240, y: 150, w: 10, h: 300 },
-  { x: 750, y: 150, w: 10, h: 300 }
-];
+export class Track {
+  constructor() {
+    this.outer = TRACK_OUTER;
+    this.inner = TRACK_INNER;
 
-export const portals = [
-  { x: 235, y: 250, w: 10, h: 100, targetX: 765 },
-  { x: 755, y: 250, w: 10, h: 100, targetX: 235 }
-];
+    this.leftPortal = {
+      x: this.outer.x,
+      y: this.outer.y + this.outer.h / 2 - PORTAL_SIZE / 2
+    };
 
-export const finishLines = {
-  p1: { x: 495, y: 450, w: 10, h: 130 },
-  p2: { x: 495, y: 20, w: 10, h: 130 }
-};
+    this.rightPortal = {
+      x: this.outer.x + this.outer.w,
+      y: this.leftPortal.y
+    };
+
+    this.lapLine = {
+      x: this.outer.x + 5,
+      y: this.outer.y + this.outer.h / 2,
+      w: 30,
+      h: 6
+    };
+  }
+
+  draw(ctx) {
+    ctx.strokeStyle = "#4cff4c";
+    ctx.lineWidth = 2;
+
+    ctx.strokeRect(
+      this.outer.x,
+      this.outer.y,
+      this.outer.w,
+      this.outer.h
+    );
+
+    ctx.strokeRect(
+      this.inner.x,
+      this.inner.y,
+      this.inner.w,
+      this.inner.h
+    );
+
+    // portals
+    ctx.fillStyle = "purple";
+    ctx.fillRect(this.leftPortal.x - 6, this.leftPortal.y, 6, PORTAL_SIZE);
+    ctx.fillRect(this.rightPortal.x, this.rightPortal.y, 6, PORTAL_SIZE);
+
+    // lap line
+    ctx.fillStyle = "white";
+    ctx.fillRect(
+      this.lapLine.x,
+      this.lapLine.y,
+      this.lapLine.w,
+      this.lapLine.h
+    );
+  }
+
+  insideOuter(x, y, r) {
+    return (
+      x - r > this.outer.x &&
+      x + r < this.outer.x + this.outer.w &&
+      y - r > this.outer.y &&
+      y + r < this.outer.y + this.outer.h
+    );
+  }
+
+  insideInner(x, y, r) {
+    return (
+      x + r > this.inner.x &&
+      x - r < this.inner.x + this.inner.w &&
+      y + r > this.inner.y &&
+      y - r < this.inner.y + this.inner.h
+    );
+  }
+
+  handleBounce(obj) {
+    if (!this.insideOuter(obj.x, obj.y, obj.radius)) {
+      if (obj.x < this.outer.x || obj.x > this.outer.x + this.outer.w)
+        obj.vx *= -0.7;
+      if (obj.y < this.outer.y || obj.y > this.outer.y + this.outer.h)
+        obj.vy *= -0.7;
+    }
+
+    if (this.insideInner(obj.x, obj.y, obj.radius)) {
+      if (
+        obj.x > this.inner.x &&
+        obj.x < this.inner.x + this.inner.w
+      )
+        obj.vy *= -0.7;
+
+      if (
+        obj.y > this.inner.y &&
+        obj.y < this.inner.y + this.inner.h
+      )
+        obj.vx *= -0.7;
+    }
+  }
+
+  tryPortal(player) {
+    if (player.portalCooldown > 0) return;
+
+    const p = player;
+
+    if (
+      p.x < this.leftPortal.x &&
+      p.y > this.leftPortal.y &&
+      p.y < this.leftPortal.y + PORTAL_SIZE
+    ) {
+      p.x = this.rightPortal.x - 20;
+      p.portalCooldown = 40;
+    }
+
+    if (
+      p.x > this.rightPortal.x &&
+      p.y > this.rightPortal.y &&
+      p.y < this.rightPortal.y + PORTAL_SIZE
+    ) {
+      p.x = this.leftPortal.x + 20;
+      p.portalCooldown = 40;
+    }
+  }
+
+  checkLap(player) {
+    if (
+      player.x > this.lapLine.x &&
+      player.x < this.lapLine.x + this.lapLine.w &&
+      Math.abs(player.vx) > 0.5
+    ) {
+      player.laps++;
+    }
+  }
+}

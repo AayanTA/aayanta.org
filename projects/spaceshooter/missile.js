@@ -1,24 +1,28 @@
-import { MISSILE_SPEED, MISSILE_RADIUS } from "./constants.js";
-
 export class Missile {
   constructor(x, y, angle, owner) {
     this.x = x;
     this.y = y;
-    this.vx = Math.cos(angle) * MISSILE_SPEED;
-    this.vy = Math.sin(angle) * MISSILE_SPEED;
+    this.vx = Math.cos(angle) * 6;
+    this.vy = Math.sin(angle) * 6;
+
+    this.radius = 3;
     this.owner = owner;
-    this.active = true;
+    this.life = 200;
   }
 
-  update() {
+  update(track) {
     this.x += this.vx;
     this.y += this.vy;
+
+    track.handleBounce(this);
+
+    this.life--;
   }
 
   draw(ctx) {
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "yellow";
     ctx.beginPath();
-    ctx.arc(this.x, this.y, MISSILE_RADIUS, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
   }
 }

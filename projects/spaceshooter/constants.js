@@ -1,15 +1,23 @@
-export const WIDTH = 1000;
-export const HEIGHT = 600;
+export const WIDTH = 900;
+export const HEIGHT = 560;
 
-export const PLAYER_RADIUS = 12;
-export const MISSILE_RADIUS = 4;
+export const SAFE_MARGIN = 40;
 
-export const ACCELERATION = 0.15;
-export const ROTATION_SPEED = 0.08;
-export const FRICTION = 0.99;
-export const MAX_SPEED = 5;
+export const TRACK_OUTER = {
+  x: SAFE_MARGIN,
+  y: SAFE_MARGIN,
+  w: WIDTH - SAFE_MARGIN * 2,
+  h: HEIGHT - SAFE_MARGIN * 2
+};
 
-export const MISSILE_SPEED = 7;
-export const STUN_TIME = 60;
+export const TRACK_INNER = {
+  x: SAFE_MARGIN + 200,
+  y: SAFE_MARGIN + 120,
+  w: WIDTH - 400,
+  h: HEIGHT - 240
+};
 
-export const SCORE_TO_WIN = 5;
+export const PORTAL_SIZE = 90;
+export const PORTAL_COOLDOWN = 30;
+
+export const MAX_LAPS = 5;

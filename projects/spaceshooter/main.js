@@ -2,9 +2,6 @@ import { Game } from "./game.js";
 import { WIDTH, HEIGHT } from "./constants.js";
 
 const canvas = document.getElementById("gameCanvas");
-if (!canvas) {
-  throw new Error("Canvas element not found");
-}
 
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
@@ -15,14 +12,14 @@ const keys = {};
 const game = new Game(ctx, keys);
 
 window.addEventListener("keydown", e => {
-  keys[e.key] = true;
+  keys[e.code] = true;
 
-  if (e.key === "Control") game.fire(game.players[0]);
-  if (e.key === "Enter") game.fire(game.players[1]);
+  if (e.code === "ShiftLeft") game.fire(game.players[0]);
+  if (e.code === "ShiftRight") game.fire(game.players[1]);
 });
 
 window.addEventListener("keyup", e => {
-  keys[e.key] = false;
+  keys[e.code] = false;
 });
 
 function loop() {
