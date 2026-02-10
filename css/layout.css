@@ -53,3 +53,32 @@ footer {
   color: var(--dim);
   margin-bottom: 0.5rem;
 }
+
+.game-container {
+  margin-top: 2rem;
+}
+
+#game-output {
+  background: #020402;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  min-height: 200px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+}
+
+.game-controls {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 0.25rem 0.75rem;
+  font-family: inherit;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
