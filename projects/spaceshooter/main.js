@@ -2,6 +2,10 @@ import { Game } from "./game.js";
 import { WIDTH, HEIGHT } from "./constants.js";
 
 const canvas = document.getElementById("gameCanvas");
+if (!canvas) {
+  throw new Error("Canvas element not found");
+}
+
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
 
@@ -12,6 +16,7 @@ const game = new Game(ctx, keys);
 
 window.addEventListener("keydown", e => {
   keys[e.key] = true;
+
   if (e.key === "Control") game.fire(game.players[0]);
   if (e.key === "Enter") game.fire(game.players[1]);
 });

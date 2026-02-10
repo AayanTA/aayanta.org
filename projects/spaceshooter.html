@@ -1,2 +1,44 @@
-<canvas id="game" width="1000" height="600"></canvas>
-<script type="module" src="spaceshooter/main.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>spaceship duel — aayanta.org</title>
+
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/theme-green.css" />
+</head>
+
+<body>
+  <main class="terminal">
+    <header>
+      <h1>spaceship duel</h1>
+      <p class="subtitle">browser arcade prototype</p>
+    </header>
+
+    <nav>
+      <p>
+        [ <a href="../index.html">home</a> |
+          <a href="../projects.html">projects</a> ]
+      </p>
+    </nav>
+
+    <section class="game-container">
+      <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+      <div class="game-controls">
+        <button disabled>WASD + Ctrl (P1)</button>
+        <button disabled>Arrows + Enter (P2)</button>
+      </div>
+    </section>
+
+    <footer>
+      <p>prototype — arcade physics, laps, portals</p>
+    </footer>
+  </main>
+
+  <script type="module" src="spaceshooter/main.js"></script>
+</body>
+</html>
