@@ -30,11 +30,7 @@ export class Game {
     for (const p of this.players) {
       p.update(this.input, delta);
 
-      // wrap screen
-      p.x = (p.x + WIDTH) % WIDTH;
-      p.y = (p.y + HEIGHT) % HEIGHT;
-
-      // wall collision
+      // wall collision (walls contain players, no screen wrapping needed)
       for (const wall of walls) {
         if (rectCircleCollide(wall, p.x, p.y, PLAYER_RADIUS)) {
           p.x -= p.vx;
