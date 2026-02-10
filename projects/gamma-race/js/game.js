@@ -1,8 +1,6 @@
-import { WIDTH, HEIGHT, PLAYER_RADIUS } from "./constants.js";
+import { WIDTH, HEIGHT, PLAYER_RADIUS, SCORE_TO_WIN } from "./constants.js";
 import { Missile } from "./missile.js";
 import { walls, finishLines, portals } from "./track.js";
-import { PLAYER_RADIUS, SCORE_TO_WIN } from "./constants.js";
-
 
 function rectCircleCollide(rect, cx, cy, r) {
   const closestX = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
@@ -11,7 +9,6 @@ function rectCircleCollide(rect, cx, cy, r) {
   const dy = cy - closestY;
   return dx * dx + dy * dy < r * r;
 }
-
 
 export class Game {
   constructor(ctx, input, players) {
@@ -30,7 +27,7 @@ export class Game {
     for (const p of this.players) {
       p.update(this.input, delta);
 
-      // wall collision (walls contain players, no screen wrapping needed)
+      // wall collision
       for (const wall of walls) {
         if (rectCircleCollide(wall, p.x, p.y, PLAYER_RADIUS)) {
           p.x -= p.vx;
@@ -62,9 +59,7 @@ export class Game {
       if (this.input.isDown(p.controls.fire)) {
         const now = Date.now();
         if (!this.lastShot.get(p) || now - this.lastShot.get(p) > 400) {
-          this.missiles.push(
-            new Missile(p.x, p.y, p.angle, p)
-          );
+          this.missiles.push(new Missile(p.x, p.y, p.angle, p));
           this.lastShot.set(p, now);
         }
       }
@@ -80,6 +75,7 @@ export class Game {
         }
       }
 
+      // missile collision with players
       for (const p of this.players) {
         if (p !== m.owner) {
           const dx = p.x - m.x;
@@ -110,6 +106,7 @@ export class Game {
       this.ctx.fillRect(p.x, p.y, p.w, p.h);
     }
 
+    // Draw players and missiles
     for (const p of this.players) p.draw(this.ctx);
     for (const m of this.missiles) m.draw(this.ctx);
 
@@ -122,11 +119,13 @@ export class Game {
     // Check win condition
     for (const p of this.players) {
       if (p.score >= SCORE_TO_WIN) {
-        this.ctx.fillText(
-          `${p.color.toUpperCase()} WINS!`,
-          420,
-          300
-        );
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        this.ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        this.ctx.fillStyle = "white";
+        this.ctx.font = "bold 48px Arial";
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(`${p.color.toUpperCase()} WINS!`, WIDTH / 2, HEIGHT / 2);
+        this.ctx.textAlign = "left";
         return;
       }
     }
