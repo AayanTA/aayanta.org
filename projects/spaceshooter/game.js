@@ -65,6 +65,9 @@ export class Game {
     });
 
     this.missiles = this.missiles.filter(m => m.life > 0);
+
+    this.track.applySpeedPads(p);
+
   }
 
   draw() {

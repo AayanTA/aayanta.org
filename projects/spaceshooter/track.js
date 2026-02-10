@@ -21,6 +21,12 @@ export class Track {
       w: 30,
       h: 6
     };
+
+    this.speedPads = [
+    { x: this.outer.x + 200, y: this.outer.y + 30, w: 60, h: 10 },
+    { x: this.outer.x + this.outer.w - 260, y: this.outer.y + this.outer.h - 40, w: 60, h: 10 }
+    ];
+
   }
 
   draw(ctx) {
@@ -54,6 +60,13 @@ export class Track {
       this.lapLine.w,
       this.lapLine.h
     );
+
+    // speed pads
+    ctx.fillStyle = "#00ff66";
+    this.speedPads.forEach(p =>
+      ctx.fillRect(p.x, p.y, p.w, p.h)
+    );
+
   }
 
   insideOuter(x, y, r) {
@@ -121,13 +134,36 @@ export class Track {
     }
   }
 
-  checkLap(player) {
-    if (
-      player.x > this.lapLine.x &&
-      player.x < this.lapLine.x + this.lapLine.w &&
-      Math.abs(player.vx) > 0.5
-    ) {
-      player.laps++;
+    checkLap(player) {
+      const crossed =
+        player.prevX < this.lapLine.x &&
+        player.x > this.lapLine.x;
+
+      if (crossed && Math.abs(player.vx) > 0.5) {
+        player.laps++;
+      }
     }
-  }
+
+
+  applySpeedPads(player) {
+    if (!player.speedCooldown) player.speedCooldown = 0;
+    if (player.speedCooldown > 0) {
+        player.speedCooldown--;
+        return;
+    }
+
+    this.speedPads.forEach(p => {
+        if (
+          player.x > p.x &&
+          player.x < p.x + p.w &&
+          player.y > p.y &&
+          player.y < p.y + p.h
+        ) {
+          player.vx += Math.cos(player.angle) * 1.8;
+          player.vy += Math.sin(player.angle) * 1.8;
+          player.speedCooldown = 30;
+        }
+    });
+    }
+
 }

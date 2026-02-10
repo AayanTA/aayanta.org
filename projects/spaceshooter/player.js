@@ -7,6 +7,10 @@ export class Player {
     this.vx = 0;
     this.vy = 0;
 
+    this.prevX = x;
+    this.prevY = y;
+
+
     this.color = color;
     this.controls = controls;
 
@@ -47,6 +51,10 @@ export class Player {
 
     this.x += this.vx;
     this.y += this.vy;
+
+    this.prevX = this.x;
+    this.prevY = this.y;
+
 
     this.updateParticles();
   }

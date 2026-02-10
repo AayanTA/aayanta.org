@@ -21,3 +21,6 @@ export const PORTAL_SIZE = 90;
 export const PORTAL_COOLDOWN = 30;
 
 export const MAX_LAPS = 5;
+
+export const SPEED_PAD_FORCE = 1.8;
+export const SPEED_PAD_COOLDOWN = 30;
