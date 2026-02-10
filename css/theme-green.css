@@ -26,6 +26,9 @@ a:hover {
 
 h1 {
   color: var(--accent);
+  text-shadow:
+    0 0 4px rgba(76, 255, 76, 0.4),
+    0 0 8px rgba(76, 255, 76, 0.2);
 }
 
 .subtitle {
@@ -47,3 +50,4 @@ body::before {
   pointer-events: none;
   z-index: 999;
 }
+
