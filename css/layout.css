@@ -35,3 +35,21 @@ footer {
   font-size: 0.8rem;
   opacity: 0.6;
 }
+
+.project-list {
+  margin-top: 2rem;
+}
+
+.project {
+  margin-bottom: 2rem;
+}
+
+.project h2 {
+  margin-bottom: 0.25rem;
+}
+
+.project .meta {
+  font-size: 0.8rem;
+  color: var(--dim);
+  margin-bottom: 0.5rem;
+}
