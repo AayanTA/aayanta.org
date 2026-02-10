@@ -1,0 +1,33 @@
+:root {
+  --bg: #0b120b;
+  --fg: #c7f7c1;
+  --accent: #4cff4c;
+  --dim: #7aa87a;
+  --border: #2f6b2f;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+.terminal {
+  background-color: #050805;
+  border-color: var(--border);
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1 {
+  color: var(--accent);
+}
+
+.subtitle {
+  color: var(--dim);
+}
