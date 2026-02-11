@@ -10,13 +10,13 @@ export class Game {
         this.track = new Track(canvas);
 
         this.players = [
-            new Player(200, 300, "cyan", {
+            new Player(150, 300, "cyan", {
                 up: "KeyW",
                 left: "KeyA",
                 right: "KeyD",
                 shoot: "ShiftLeft"
             }),
-            new Player(600, 300, "orange", {
+            new Player(650, 300, "orange", {
                 up: "ArrowUp",
                 left: "ArrowLeft",
                 right: "ArrowRight",
@@ -28,11 +28,18 @@ export class Game {
         this.keys = {};
         this.gameOver = false;
 
+        this.countdown = 180; // 3 seconds
+
         window.addEventListener("keydown", e => this.keys[e.code] = true);
         window.addEventListener("keyup", e => this.keys[e.code] = false);
     }
 
     update() {
+        if (this.countdown > 0) {
+            this.countdown--;
+            return;
+        }
+
         if (this.gameOver) return;
 
         this.players.forEach(player => {
@@ -60,16 +67,25 @@ export class Game {
         this.players.forEach(p => p.draw(this.ctx));
         this.missiles.forEach(m => m.draw(this.ctx));
 
+        this.ctx.fillStyle = "white";
+        this.ctx.font = "18px Arial";
+
         this.players.forEach((p, i) => {
-            this.ctx.fillStyle = "white";
-            this.ctx.font = "20px Arial";
             this.ctx.fillText(`P${i+1}: ${p.score}`, 20, 30 + i * 25);
         });
 
+        if (this.countdown > 0) {
+            this.ctx.font = "60px Arial";
+            this.ctx.fillText(
+                Math.ceil(this.countdown / 60),
+                this.canvas.width / 2 - 15,
+                this.canvas.height / 2
+            );
+        }
+
         if (this.gameOver) {
-            this.ctx.fillStyle = "white";
             this.ctx.font = "50px Arial";
-            this.ctx.fillText("GAME OVER", 250, 300);
+            this.ctx.fillText("GAME OVER", 240, 300);
         }
     }
 }

@@ -1,9 +1,14 @@
 import { Game } from "./game.js";
 
-window.addEventListener("DOMContentLoaded", () => {
+function init() {
     const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
 
+    if (!canvas) {
+        console.error("Canvas not found. Check your HTML id.");
+        return;
+    }
+
+    const ctx = canvas.getContext("2d");
     const game = new Game(canvas, ctx);
 
     function loop() {
@@ -13,4 +18,10 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     loop();
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+} else {
+    init();
+}

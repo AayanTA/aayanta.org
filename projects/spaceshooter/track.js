@@ -3,18 +3,18 @@ export class Track {
         this.canvas = canvas;
 
         this.outer = { x: 100, y: 100, w: 600, h: 400 };
-        this.inner = { x: 250, y: 200, w: 300, h: 200 };
+        this.inner = { x: 300, y: 200, w: 200, h: 200 };
 
         this.portalLeft = { x: 100, y: 250, w: 10, h: 100 };
         this.portalRight = { x: 690, y: 250, w: 10, h: 100 };
 
-        this.speedPad = { x: 370, y: 150, w: 60, h: 30, angle: 0 };
+        this.speedPad = { x: 350, y: 120, w: 100, h: 30 };
 
         this.checkpoints = [
-            { x: 700, y: 300 },
-            { x: 400, y: 500 },
-            { x: 100, y: 300 },
-            { x: 400, y: 100 }
+            { x: 650, y: 300 },
+            { x: 400, y: 450 },
+            { x: 150, y: 300 },
+            { x: 400, y: 150 }
         ];
     }
 
@@ -32,17 +32,9 @@ export class Track {
         ctx.fillStyle = "lime";
         ctx.fillRect(this.speedPad.x, this.speedPad.y, this.speedPad.w, this.speedPad.h);
 
-        // start/finish line
         ctx.fillStyle = "white";
         ctx.fillRect(690, 250, 5, 100);
-    }
-
-    handleWallCollision(obj) {
-        if (this.isWall(obj.x, obj.y)) {
-            obj.x -= Math.cos(obj.angle) * obj.speed;
-            obj.y -= Math.sin(obj.angle) * obj.speed;
-            obj.speed *= -0.5;
-        }
+        ctx.fillRect(105, 250, 5, 100);
     }
 
     isWall(x, y) {
@@ -61,13 +53,21 @@ export class Track {
         return !inOuter || inInner;
     }
 
+    handleWallCollision(obj) {
+        if (this.isWall(obj.x, obj.y)) {
+            obj.x -= Math.cos(obj.angle) * obj.speed;
+            obj.y -= Math.sin(obj.angle) * obj.speed;
+            obj.speed *= -0.5;
+        }
+    }
+
     handlePortal(obj) {
         if (
             obj.x < this.portalLeft.x + this.portalLeft.w &&
             obj.y > this.portalLeft.y &&
             obj.y < this.portalLeft.y + this.portalLeft.h
         ) {
-            obj.x = this.portalRight.x - 15;
+            obj.x = this.portalRight.x - 20;
         }
 
         if (
@@ -75,7 +75,7 @@ export class Track {
             obj.y > this.portalRight.y &&
             obj.y < this.portalRight.y + this.portalRight.h
         ) {
-            obj.x = this.portalLeft.x + 15;
+            obj.x = this.portalLeft.x + 20;
         }
     }
 
@@ -86,9 +86,8 @@ export class Track {
             player.y > this.speedPad.y &&
             player.y < this.speedPad.y + this.speedPad.h
         ) {
-            // boost RIGHT only (fixed direction)
             player.speed = 8;
-            player.angle = 0;
+            player.angle = 0; // fixed direction boost
         }
     }
 
@@ -97,7 +96,7 @@ export class Track {
         const dx = player.x - cp.x;
         const dy = player.y - cp.y;
 
-        if (Math.hypot(dx, dy) < 30) {
+        if (Math.hypot(dx, dy) < 40) {
             player.checkpointIndex++;
 
             if (player.checkpointIndex >= this.checkpoints.length) {

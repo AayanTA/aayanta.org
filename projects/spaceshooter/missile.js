@@ -3,8 +3,7 @@ export class Missile {
         this.x = x;
         this.y = y;
         this.angle = angle;
-        this.speed = 6;
-        this.radius = 4;
+        this.speed = 7;
         this.dead = false;
     }
 
@@ -22,7 +21,7 @@ export class Missile {
     draw(ctx) {
         ctx.fillStyle = "red";
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
         ctx.fill();
     }
 }
