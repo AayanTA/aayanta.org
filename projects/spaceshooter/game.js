@@ -1,9 +1,8 @@
 import { Player } from "./player.js";
 import { Missile } from "./missile.js";
 import { Track } from "./track.js";
-import { WIDTH, HEIGHT, MAX_LAPS } from "./constants.js";
+import { WIDTH, HEIGHT } from "./constants.js";
 import { playSound } from "./sound.js";
-
 
 export class Game {
   constructor(ctx, keys) {
@@ -16,12 +15,14 @@ export class Game {
       new Player(150, HEIGHT / 2, "cyan", {
         left: "KeyA",
         right: "KeyD",
-        thrust: "KeyW"
+        thrust: "KeyW",
+        fire: "ShiftLeft"
       }),
       new Player(WIDTH - 150, HEIGHT / 2, "red", {
         left: "ArrowLeft",
         right: "ArrowRight",
-        thrust: "ArrowUp"
+        thrust: "ArrowUp",
+        fire: "ShiftRight"
       })
     ];
 
@@ -30,7 +31,8 @@ export class Game {
 
   fire(player) {
     if (player.stun > 0) return;
-    playSound("sfx/shoot.wav");
+    if (player.fireCooldown > 0) return;
+
     this.missiles.push(
       new Missile(
         player.x + Math.cos(player.angle) * 16,
@@ -39,15 +41,27 @@ export class Game {
         player
       )
     );
+
+    player.fireCooldown = 20; // ~0.33 seconds
+    playSound("spaceshooter/sfx/shoot.wav");
   }
 
   update() {
     this.players.forEach(p => {
+
+      if (!p.fireCooldown) p.fireCooldown = 0;
+      if (p.fireCooldown > 0) p.fireCooldown--;
+
       p.update(this.keys);
+
+      if (this.keys[p.controls.fire]) {
+        this.fire(p);
+      }
 
       this.track.handleBounce(p);
       this.track.tryPortal(p);
       this.track.checkLap(p);
+      this.track.applySpeedPads(p);
     });
 
     this.missiles.forEach(m => {
@@ -59,25 +73,19 @@ export class Game {
           const dy = p.y - m.y;
 
           if (Math.hypot(dx, dy) < p.radius) {
-            playSound("sfx/hit.wav");
             p.stun = 60;
             m.life = 0;
+            playSound("spaceshooter/sfx/hit.wav");
           }
         }
       });
     });
 
     this.missiles = this.missiles.filter(m => m.life > 0);
-
-    this.track.applySpeedPads(p);
-
   }
 
   draw() {
     const ctx = this.ctx;
-
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
     this.track.draw(ctx);
 
@@ -85,15 +93,10 @@ export class Game {
     this.missiles.forEach(m => m.draw(ctx));
 
     ctx.fillStyle = "white";
-    ctx.fillText(
-      `P1: ${this.players[0].laps}`,
-      60,
-      25
-    );
-    ctx.fillText(
-      `P2: ${this.players[1].laps}`,
-      WIDTH - 100,
-      25
-    );
+    ctx.font = "16px monospace";
+    ctx.textAlign = "left";
+
+    ctx.fillText(`P1: ${this.players[0].laps}`, 60, 25);
+    ctx.fillText(`P2: ${this.players[1].laps}`, WIDTH - 120, 25);
   }
 }
