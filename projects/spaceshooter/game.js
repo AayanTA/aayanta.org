@@ -6,16 +6,19 @@ import { playSound } from "./sound.js";
 import {
   initTrack,
   drawTrack,
+  handleWallCollision,
   handleMissilePortals,
-  updateLap,
-  applySpeedPads
+  applySpeedPads,
+  updateLap
 } from "./track.js";
+
 
 export class Game {
   constructor(ctx, keys, canvas) {
     this.ctx = ctx;
     this.keys = keys;
     this.canvas = canvas;
+    initTrack(canvas);
 
     const trackData = initTrack(canvas);
     this.outer = trackData.outer;
@@ -70,7 +73,7 @@ export class Game {
     }
 
     if (this.gameState !== "playing") return;
-
+    
     this.players.forEach(p => {
 
       if (!p.fireCooldown) p.fireCooldown = 0;
@@ -82,6 +85,7 @@ export class Game {
         this.fire(p);
       }
 
+      handleWallCollision(p);
       applySpeedPads(p);
       updateLap(p);
 
@@ -93,7 +97,7 @@ export class Game {
 
     this.missiles.forEach(m => {
       m.update(this.outer, this.inner);
-
+      handleWallCollision(m);
       handleMissilePortals(m);
 
       this.players.forEach(p => {

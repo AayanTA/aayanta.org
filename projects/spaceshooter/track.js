@@ -5,141 +5,114 @@ export const TRACK = {
   innerMargin: 180
 };
 
+export let outerRect;
+export let innerRect;
+
+export let portals = [];
+export let speedPads = [];
 export let checkpoints = [];
 export let startLines = [];
-export let speedPads = [];
-export let portals = [];
 
 export function initTrack(canvas) {
   const w = canvas.width;
   const h = canvas.height;
 
-  const outer = {
+  outerRect = {
     x: TRACK.outerMargin,
     y: TRACK.outerMargin,
     w: w - TRACK.outerMargin * 2,
     h: h - TRACK.outerMargin * 2
   };
 
-  const inner = {
+  innerRect = {
     x: TRACK.innerMargin,
     y: TRACK.innerMargin,
     w: w - TRACK.innerMargin * 2,
     h: h - TRACK.innerMargin * 2
   };
 
-  // CLOCKWISE CHECKPOINTS
-  checkpoints = [
-    { x: w / 2, y: outer.y + 5 },               // top
-    { x: outer.x + outer.w - 5, y: h / 2 },     // right
-    { x: w / 2, y: outer.y + outer.h - 5 },     // bottom
-    { x: outer.x + 5, y: h / 2 }                // left
-  ];
-
-  // START LINES (2 slightly offset)
-  startLines = [
-    { x: outer.x + 100, y: outer.y, w: 4, h: 120 },
-    { x: outer.x + 130, y: outer.y, w: 4, h: 120 }
-  ];
-
-  // SPEED PADS (fixed direction)
-  speedPads = [
-    { x: w / 2 - 40, y: outer.y + 20, w: 80, h: 20, dir: { x: 1, y: 0 } }
-  ];
-
   portals = [
-    { x: outer.x + 10, y: h / 2 - 40, w: 20, h: 80, side: "left" },
-    { x: outer.x + outer.w - 30, y: h / 2 - 40, w: 20, h: 80, side: "right" }
+    { x: outerRect.x + 5, y: h / 2 - 40, w: 20, h: 80, side: "left" },
+    { x: outerRect.x + outerRect.w - 25, y: h / 2 - 40, w: 20, h: 80, side: "right" }
   ];
 
-  return { outer, inner };
+  speedPads = [
+    { x: w / 2 - 50, y: outerRect.y + 10, w: 100, h: 20, dir: { x: 1, y: 0 } }
+  ];
+
+  checkpoints = [
+    { x: w / 2, y: outerRect.y + 10 },
+    { x: outerRect.x + outerRect.w - 10, y: h / 2 },
+    { x: w / 2, y: outerRect.y + outerRect.h - 10 },
+    { x: outerRect.x + 10, y: h / 2 }
+  ];
+
+  startLines = [
+    { x: outerRect.x + 120, y: outerRect.y, w: 6, h: 120 },
+    { x: outerRect.x + 150, y: outerRect.y, w: 6, h: 120 }
+  ];
 }
 
-export function drawTrack(ctx, outer, inner) {
+export function drawTrack(ctx) {
   ctx.strokeStyle = "#00ff88";
   ctx.lineWidth = 3;
 
-  ctx.strokeRect(outer.x, outer.y, outer.w, outer.h);
-  ctx.strokeRect(inner.x, inner.y, inner.w, inner.h);
+  ctx.strokeRect(outerRect.x, outerRect.y, outerRect.w, outerRect.h);
+  ctx.strokeRect(innerRect.x, innerRect.y, innerRect.w, innerRect.h);
 
-  // draw checkpoints
-  ctx.fillStyle = "rgba(0,255,100,0.4)";
-  checkpoints.forEach(c => {
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // draw start lines
   ctx.fillStyle = "#ffffff";
-  startLines.forEach(s => {
-    ctx.fillRect(s.x, s.y, s.w, s.h);
-  });
+  startLines.forEach(s => ctx.fillRect(s.x, s.y, s.w, s.h));
 
-  // draw speed pads
   ctx.fillStyle = "#00ffff";
-  speedPads.forEach(p => {
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-  });
+  speedPads.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
 
-  // draw portals
   ctx.fillStyle = "#ff00ff";
-  portals.forEach(p => {
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-  });
+  portals.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
 }
 
-export function handleMissilePortals(missile) {
-  portals.forEach(p => {
-    if (
-      missile.x > p.x &&
-      missile.x < p.x + p.w &&
-      missile.y > p.y &&
-      missile.y < p.y + p.h
-    ) {
-      const other = portals.find(o => o !== p);
-      missile.x = other.x + other.w / 2;
-      missile.y = other.y + other.h / 2;
-    }
-  });
-}
+export function handleWallCollision(entity) {
 
-export function applySpeedPads(player) {
-  speedPads.forEach(p => {
-    if (
-      player.x > p.x &&
-      player.x < p.x + p.w &&
-      player.y > p.y &&
-      player.y < p.y + p.h
-    ) {
-      player.vx += p.dir.x * 4;
-      player.vy += p.dir.y * 4;
-    }
-  });
-}
+  const r = entity.radius;
 
-export function updateLap(player) {
-  const target = checkpoints[player.checkpointIndex];
-
-  const dx = player.x - target.x;
-  const dy = player.y - target.y;
-
-  if (Math.sqrt(dx * dx + dy * dy) < 20) {
-    player.checkpointIndex++;
+  // Outer walls
+  if (entity.x - r < outerRect.x) {
+    entity.x = outerRect.x + r;
+    entity.vx *= -0.6;
+  }
+  if (entity.x + r > outerRect.x + outerRect.w) {
+    entity.x = outerRect.x + outerRect.w - r;
+    entity.vx *= -0.6;
+  }
+  if (entity.y - r < outerRect.y) {
+    entity.y = outerRect.y + r;
+    entity.vy *= -0.6;
+  }
+  if (entity.y + r > outerRect.y + outerRect.h) {
+    entity.y = outerRect.y + outerRect.h - r;
+    entity.vy *= -0.6;
   }
 
-  if (player.checkpointIndex >= checkpoints.length) {
-    // must cross start line
-    const line = startLines[player.id];
+  // Inner walls
+  if (
+    entity.x > innerRect.x - r &&
+    entity.x < innerRect.x + innerRect.w + r &&
+    entity.y > innerRect.y - r &&
+    entity.y < innerRect.y + innerRect.h + r
+  ) {
+    if (entity.x < innerRect.x) {
+      entity.x = innerRect.x - r;
+      entity.vx *= -0.6;
+    } else if (entity.x > innerRect.x + innerRect.w) {
+      entity.x = innerRect.x + innerRect.w + r;
+      entity.vx *= -0.6;
+    }
 
-    if (
-      player.x > line.x &&
-      player.x < line.x + line.w &&
-      player.y > line.y &&
-      player.y < line.y + line.h
-    ) {
-      player.laps++;
-      player.checkpointIndex = 0;
+    if (entity.y < innerRect.y) {
+      entity.y = innerRect.y - r;
+      entity.vy *= -0.6;
+    } else if (entity.y > innerRect.y + innerRect.h) {
+      entity.y = innerRect.y + innerRect.h + r;
+      entity.vy *= -0.6;
     }
   }
 }
