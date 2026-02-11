@@ -5,6 +5,8 @@ export class Missile {
     this.vx = Math.cos(angle) * 6;
     this.vy = Math.sin(angle) * 6;
 
+    this.isMissile = true;
+
     this.radius = 3;
     this.owner = owner;
     this.life = 200;
