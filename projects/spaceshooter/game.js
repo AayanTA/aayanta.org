@@ -2,6 +2,8 @@ import { Player } from "./player.js";
 import { Missile } from "./missile.js";
 import { Track } from "./track.js";
 import { WIDTH, HEIGHT, MAX_LAPS } from "./constants.js";
+import { playSound } from "./sound.js";
+
 
 export class Game {
   constructor(ctx, keys) {
@@ -28,7 +30,7 @@ export class Game {
 
   fire(player) {
     if (player.stun > 0) return;
-
+    playSound("sfx/shoot.wav");
     this.missiles.push(
       new Missile(
         player.x + Math.cos(player.angle) * 16,
@@ -57,6 +59,7 @@ export class Game {
           const dy = p.y - m.y;
 
           if (Math.hypot(dx, dy) < p.radius) {
+            playSound("sfx/hit.wav");
             p.stun = 60;
             m.life = 0;
           }

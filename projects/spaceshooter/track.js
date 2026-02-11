@@ -159,6 +159,7 @@ export class Track {
           player.y > p.y &&
           player.y < p.y + p.h
         ) {
+          playSound("sfx/boost.wav");
           player.vx += Math.cos(player.angle) * 1.8;
           player.vy += Math.sin(player.angle) * 1.8;
           player.speedCooldown = 30;
