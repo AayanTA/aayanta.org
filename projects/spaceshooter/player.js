@@ -1,27 +1,21 @@
 export class Player {
-  constructor(x, y, color, controls) {
+  constructor(x, y, color, controls, id) {
     this.x = x;
     this.y = y;
-    this.angle = 0;
+    this.color = color;
+    this.controls = controls;
+    this.id = id;
 
     this.vx = 0;
     this.vy = 0;
-
-    this.prevX = x;
-    this.prevY = y;
-
-
-    this.color = color;
-    this.controls = controls;
-
+    this.angle = 0;
     this.radius = 12;
 
     this.laps = 0;
+    this.checkpointIndex = 0;
+
     this.stun = 0;
-
-    this.portalCooldown = 0;
-
-    this.particles = [];
+    this.fireCooldown = 0;
   }
 
   update(keys) {
