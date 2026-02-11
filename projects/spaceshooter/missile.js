@@ -1,24 +1,28 @@
 export class Missile {
-  constructor(x, y, angle, owner) {
-    this.x = x;
-    this.y = y;
-    this.vx = Math.cos(angle) * 6;
-    this.vy = Math.sin(angle) * 6;
-    this.radius = 4;
-    this.life = 120;
-    this.owner = owner;
-  }
+    constructor(x, y, angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.speed = 6;
+        this.radius = 4;
+        this.dead = false;
+    }
 
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.life--;
-  }
+    update(track) {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
 
-  draw(ctx) {
-    ctx.fillStyle = "#ffff00";
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
+        track.handlePortal(this);
+
+        if (track.isWall(this.x, this.y)) {
+            this.dead = true;
+        }
+    }
+
+    draw(ctx) {
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }

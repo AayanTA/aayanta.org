@@ -1,158 +1,75 @@
 import { Player } from "./player.js";
 import { Missile } from "./missile.js";
-import { WIDTH, HEIGHT } from "./constants.js";
-import { playSound } from "./sound.js";
-
-import {
-  initTrack,
-  drawTrack,
-  handleWallCollision,
-  handleMissilePortals,
-  applySpeedPads,
-  updateLap
-} from "./track.js";
-
+import { Track } from "./track.js";
 
 export class Game {
-  constructor(ctx, keys, canvas) {
-    this.ctx = ctx;
-    this.keys = keys;
-    this.canvas = canvas;
-    initTrack(canvas);
+    constructor(canvas, ctx) {
+        this.canvas = canvas;
+        this.ctx = ctx;
 
-    const trackData = initTrack(canvas);
-    this.outer = trackData.outer;
-    this.inner = trackData.inner;
+        this.track = new Track(canvas);
 
-    this.gameState = "countdown";
-    this.winner = null;
-    this.countdown = 180; // 3 seconds at 60fps
+        this.players = [
+            new Player(200, 300, "cyan", {
+                up: "KeyW",
+                left: "KeyA",
+                right: "KeyD",
+                shoot: "ShiftLeft"
+            }),
+            new Player(600, 300, "orange", {
+                up: "ArrowUp",
+                left: "ArrowLeft",
+                right: "ArrowRight",
+                shoot: "ShiftRight"
+            })
+        ];
 
-    this.players = [
-      new Player(150, HEIGHT / 2, "cyan", {
-        left: "KeyA",
-        right: "KeyD",
-        thrust: "KeyW",
-        fire: "ShiftLeft"
-      }, 0),
-      new Player(WIDTH - 150, HEIGHT / 2, "red", {
-        left: "ArrowLeft",
-        right: "ArrowRight",
-        thrust: "ArrowUp",
-        fire: "ShiftRight"
-      }, 1)
-    ];
+        this.missiles = [];
+        this.keys = {};
+        this.gameOver = false;
 
-    this.missiles = [];
-  }
-
-  fire(player) {
-    if (player.stun > 0) return;
-    if (player.fireCooldown > 0) return;
-
-    this.missiles.push(
-      new Missile(
-        player.x + Math.cos(player.angle) * 16,
-        player.y + Math.sin(player.angle) * 16,
-        player.angle,
-        player
-      )
-    );
-
-    player.fireCooldown = 20;
-    playSound("spaceshooter/sfx/shoot.wav");
-  }
-
-  update() {
-    if (this.gameState === "countdown") {
-      this.countdown--;
-      if (this.countdown <= 0) {
-        this.gameState = "playing";
-      }
-      return;
+        window.addEventListener("keydown", e => this.keys[e.code] = true);
+        window.addEventListener("keyup", e => this.keys[e.code] = false);
     }
 
-    if (this.gameState !== "playing") return;
-    
-    this.players.forEach(p => {
+    update() {
+        if (this.gameOver) return;
 
-      if (!p.fireCooldown) p.fireCooldown = 0;
-      if (p.fireCooldown > 0) p.fireCooldown--;
+        this.players.forEach(player => {
+            player.update(this.keys, this.track);
 
-      p.update(this.keys);
+            if (this.keys[player.controls.shoot]) {
+                const missile = player.tryShoot();
+                if (missile) this.missiles.push(missile);
+            }
 
-      if (this.keys[p.controls.fire]) {
-        this.fire(p);
-      }
+            if (player.score >= 10) {
+                this.gameOver = true;
+            }
+        });
 
-      handleWallCollision(p);
-      applySpeedPads(p);
-      updateLap(p);
+        this.missiles.forEach(m => m.update(this.track));
+        this.missiles = this.missiles.filter(m => !m.dead);
+    }
 
-      if (p.laps >= 10) {
-        this.gameState = "gameover";
-        this.winner = p.id;
-      }
-    });
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.missiles.forEach(m => {
-      m.update(this.outer, this.inner);
-      handleWallCollision(m);
-      handleMissilePortals(m);
+        this.track.draw(this.ctx);
 
-      this.players.forEach(p => {
-        if (p !== m.owner) {
-          const dx = p.x - m.x;
-          const dy = p.y - m.y;
+        this.players.forEach(p => p.draw(this.ctx));
+        this.missiles.forEach(m => m.draw(this.ctx));
 
-          if (Math.hypot(dx, dy) < p.radius) {
-            p.stun = 60;
-            m.life = 0;
-            playSound("spaceshooter/sfx/hit.wav");
-          }
+        this.players.forEach((p, i) => {
+            this.ctx.fillStyle = "white";
+            this.ctx.font = "20px Arial";
+            this.ctx.fillText(`P${i+1}: ${p.score}`, 20, 30 + i * 25);
+        });
+
+        if (this.gameOver) {
+            this.ctx.fillStyle = "white";
+            this.ctx.font = "50px Arial";
+            this.ctx.fillText("GAME OVER", 250, 300);
         }
-      });
-    });
-
-    this.missiles = this.missiles.filter(m => m.life > 0);
-  }
-
-  draw() {
-    const ctx = this.ctx;
-
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    drawTrack(ctx, this.outer, this.inner);
-
-    this.players.forEach(p => p.draw(ctx));
-    this.missiles.forEach(m => m.draw(ctx));
-
-    ctx.fillStyle = "white";
-    ctx.font = "16px monospace";
-    ctx.textAlign = "left";
-
-    ctx.fillText(`P1: ${this.players[0].laps}`, 60, 25);
-    ctx.fillText(`P2: ${this.players[1].laps}`, WIDTH - 120, 25);
-
-    if (this.gameState === "countdown") {
-      ctx.fillStyle = "#00ff88";
-      ctx.font = "60px monospace";
-      ctx.textAlign = "center";
-
-      const number = Math.ceil(this.countdown / 60);
-      ctx.fillText(number, this.canvas.width / 2, this.canvas.height / 2);
     }
-
-    if (this.gameState === "gameover") {
-      ctx.fillStyle = "#00ff88";
-      ctx.font = "40px monospace";
-      ctx.textAlign = "center";
-
-      ctx.fillText(
-        `PLAYER ${this.winner + 1} WINS`,
-        this.canvas.width / 2,
-        this.canvas.height / 2
-      );
-    }
-  }
 }

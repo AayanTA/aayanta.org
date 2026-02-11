@@ -1,33 +1,16 @@
 import { Game } from "./game.js";
 
 window.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-  const canvas = document.getElementById("game");
+    const game = new Game(canvas, ctx);
 
-  if (!canvas) {
-    console.error("Canvas not found.");
-    return;
-  }
+    function loop() {
+        game.update();
+        game.draw();
+        requestAnimationFrame(loop);
+    }
 
-  const ctx = canvas.getContext("2d");
-
-  const keys = {};
-
-  window.addEventListener("keydown", e => {
-    keys[e.code] = true;
-  });
-
-  window.addEventListener("keyup", e => {
-    keys[e.code] = false;
-  });
-
-  const game = new Game(ctx, keys, canvas);
-
-  function loop() {
-    game.update();
-    game.draw();
-    requestAnimationFrame(loop);
-  }
-
-  loop();
+    loop();
 });
