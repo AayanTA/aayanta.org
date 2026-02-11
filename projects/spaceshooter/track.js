@@ -1,216 +1,145 @@
-import { WIDTH, HEIGHT } from "./constants.js";
-import { playSound } from "./sound.js";
+// track.js
 
-export class Track {
-  constructor() {
-    // Centered properly
-    this.outerMargin = 60;
+export const TRACK = {
+  outerMargin: 40,
+  innerMargin: 180
+};
 
-    this.inner = {
-      x: WIDTH / 2 - 300,
-      y: HEIGHT / 2 - 150,
-      w: 600,
-      h: 300
-    };
+export let checkpoints = [];
+export let startLines = [];
+export let speedPads = [];
+export let portals = [];
 
-    // Checkpoints (left and right)
-    this.checkLeft = {
-      x: this.inner.x - 20,
-      y: HEIGHT / 2 - 100,
-      w: 20,
-      h: 200
-    };
+export function initTrack(canvas) {
+  const w = canvas.width;
+  const h = canvas.height;
 
-    this.checkRight = {
-      x: this.inner.x + this.inner.w,
-      y: HEIGHT / 2 - 100,
-      w: 20,
-      h: 200
-    };
+  const outer = {
+    x: TRACK.outerMargin,
+    y: TRACK.outerMargin,
+    w: w - TRACK.outerMargin * 2,
+    h: h - TRACK.outerMargin * 2
+  };
 
-    // Full lap line
-    this.lapLine = {
-      x: WIDTH / 2 - 10,
-      y: this.inner.y + this.inner.h,
-      w: 20,
-      h: this.outerMargin
-    };
+  const inner = {
+    x: TRACK.innerMargin,
+    y: TRACK.innerMargin,
+    w: w - TRACK.innerMargin * 2,
+    h: h - TRACK.innerMargin * 2
+  };
 
-    this.speedPad = {
-      x: WIDTH / 2 - 100,
-      y: this.inner.y - 30,
-      w: 200,
-      h: 20
-    };
+  // CLOCKWISE CHECKPOINTS
+  checkpoints = [
+    { x: w / 2, y: outer.y + 5 },               // top
+    { x: outer.x + outer.w - 5, y: h / 2 },     // right
+    { x: w / 2, y: outer.y + outer.h - 5 },     // bottom
+    { x: outer.x + 5, y: h / 2 }                // left
+  ];
 
-    this.portalLeft = {
-      x: this.inner.x - 20,
-      y: HEIGHT / 2 - 40,
-      w: 20,
-      h: 80
-    };
+  // START LINES (2 slightly offset)
+  startLines = [
+    { x: outer.x + 100, y: outer.y, w: 4, h: 120 },
+    { x: outer.x + 130, y: outer.y, w: 4, h: 120 }
+  ];
 
-    this.portalRight = {
-      x: this.inner.x + this.inner.w,
-      y: HEIGHT / 2 - 40,
-      w: 20,
-      h: 80
-    };
-  }
+  // SPEED PADS (fixed direction)
+  speedPads = [
+    { x: w / 2 - 40, y: outer.y + 20, w: 80, h: 20, dir: { x: 1, y: 0 } }
+  ];
 
-  draw(ctx) {
-    ctx.strokeStyle = "white";
+  portals = [
+    { x: outer.x + 10, y: h / 2 - 40, w: 20, h: 80, side: "left" },
+    { x: outer.x + outer.w - 30, y: h / 2 - 40, w: 20, h: 80, side: "right" }
+  ];
 
-    // Outer boundary
-    ctx.strokeRect(
-      this.outerMargin,
-      this.outerMargin,
-      WIDTH - this.outerMargin * 2,
-      HEIGHT - this.outerMargin * 2
-    );
+  return { outer, inner };
+}
 
-    // Inner wall
-    ctx.strokeRect(
-      this.inner.x,
-      this.inner.y,
-      this.inner.w,
-      this.inner.h
-    );
+export function drawTrack(ctx, outer, inner) {
+  ctx.strokeStyle = "#00ff88";
+  ctx.lineWidth = 3;
 
-    // Lap line
-    ctx.fillStyle = "white";
-    ctx.fillRect(
-      this.lapLine.x,
-      this.lapLine.y,
-      this.lapLine.w,
-      this.lapLine.h
-    );
+  ctx.strokeRect(outer.x, outer.y, outer.w, outer.h);
+  ctx.strokeRect(inner.x, inner.y, inner.w, inner.h);
 
-    // Speed pad
-    ctx.fillStyle = "lime";
-    ctx.fillRect(
-      this.speedPad.x,
-      this.speedPad.y,
-      this.speedPad.w,
-      this.speedPad.h
-    );
+  // draw checkpoints
+  ctx.fillStyle = "rgba(0,255,100,0.4)";
+  checkpoints.forEach(c => {
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+  });
 
-    // Portals
-    ctx.fillStyle = "cyan";
-    ctx.fillRect(
-      this.portalLeft.x,
-      this.portalLeft.y,
-      this.portalLeft.w,
-      this.portalLeft.h
-    );
+  // draw start lines
+  ctx.fillStyle = "#ffffff";
+  startLines.forEach(s => {
+    ctx.fillRect(s.x, s.y, s.w, s.h);
+  });
 
-    ctx.fillRect(
-      this.portalRight.x,
-      this.portalRight.y,
-      this.portalRight.w,
-      this.portalRight.h
-    );
-  }
+  // draw speed pads
+  ctx.fillStyle = "#00ffff";
+  speedPads.forEach(p => {
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+  });
 
-  handleBounce(obj) {
-    const r = obj.radius;
+  // draw portals
+  ctx.fillStyle = "#ff00ff";
+  portals.forEach(p => {
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+  });
+}
 
-    // Outer bounds
-    if (obj.x - r < this.outerMargin) {
-      obj.x = this.outerMargin + r;
-      obj.vx = Math.abs(obj.vx);
-    }
-    if (obj.x + r > WIDTH - this.outerMargin) {
-      obj.x = WIDTH - this.outerMargin - r;
-      obj.vx = -Math.abs(obj.vx);
-    }
-    if (obj.y - r < this.outerMargin) {
-      obj.y = this.outerMargin + r;
-      obj.vy = Math.abs(obj.vy);
-    }
-    if (obj.y + r > HEIGHT - this.outerMargin) {
-      obj.y = HEIGHT - this.outerMargin - r;
-      obj.vy = -Math.abs(obj.vy);
-    }
-
-    // Inner wall bounce (reflect correctly)
+export function handleMissilePortals(missile) {
+  portals.forEach(p => {
     if (
-      obj.x > this.inner.x - r &&
-      obj.x < this.inner.x + this.inner.w + r &&
-      obj.y > this.inner.y - r &&
-      obj.y < this.inner.y + this.inner.h + r
+      missile.x > p.x &&
+      missile.x < p.x + p.w &&
+      missile.y > p.y &&
+      missile.y < p.y + p.h
     ) {
-      const left = obj.x - this.inner.x;
-      const right = this.inner.x + this.inner.w - obj.x;
-      const top = obj.y - this.inner.y;
-      const bottom = this.inner.y + this.inner.h - obj.y;
-
-      const min = Math.min(left, right, top, bottom);
-
-      if (min === left) {
-        obj.x = this.inner.x - r;
-        obj.vx = -Math.abs(obj.vx);
-      }
-      if (min === right) {
-        obj.x = this.inner.x + this.inner.w + r;
-        obj.vx = Math.abs(obj.vx);
-      }
-      if (min === top) {
-        obj.y = this.inner.y - r;
-        obj.vy = -Math.abs(obj.vy);
-      }
-      if (min === bottom) {
-        obj.y = this.inner.y + this.inner.h + r;
-        obj.vy = Math.abs(obj.vy);
-      }
+      const other = portals.find(o => o !== p);
+      missile.x = other.x + other.w / 2;
+      missile.y = other.y + other.h / 2;
     }
+  });
+}
+
+export function applySpeedPads(player) {
+  speedPads.forEach(p => {
+    if (
+      player.x > p.x &&
+      player.x < p.x + p.w &&
+      player.y > p.y &&
+      player.y < p.y + p.h
+    ) {
+      player.vx += p.dir.x * 4;
+      player.vy += p.dir.y * 4;
+    }
+  });
+}
+
+export function updateLap(player) {
+  const target = checkpoints[player.checkpointIndex];
+
+  const dx = player.x - target.x;
+  const dy = player.y - target.y;
+
+  if (Math.sqrt(dx * dx + dy * dy) < 20) {
+    player.checkpointIndex++;
   }
 
-  tryPortal(missile) {
-    if (!missile.isMissile) return;
-
-    if (this.inRect(missile, this.portalLeft)) {
-      missile.x = this.portalRight.x + this.portalRight.w + 10;
-    }
-
-    if (this.inRect(missile, this.portalRight)) {
-      missile.x = this.portalLeft.x - 10;
-    }
-  }
-
-  applySpeedPads(player) {
-    if (this.inRect(player, this.speedPad)) {
-      player.vy -= 1.5;
-      playSound("spaceshooter/sfx/boost.wav");
-    }
-  }
-
-  checkLap(player) {
-    if (this.inRect(player, this.checkLeft)) {
-      player.hitLeft = true;
-    }
-
-    if (this.inRect(player, this.checkRight)) {
-      player.hitRight = true;
-    }
+  if (player.checkpointIndex >= checkpoints.length) {
+    // must cross start line
+    const line = startLines[player.id];
 
     if (
-      this.inRect(player, this.lapLine) &&
-      player.hitLeft &&
-      player.hitRight
+      player.x > line.x &&
+      player.x < line.x + line.w &&
+      player.y > line.y &&
+      player.y < line.y + line.h
     ) {
       player.laps++;
-      player.hitLeft = false;
-      player.hitRight = false;
+      player.checkpointIndex = 0;
     }
-  }
-
-  inRect(obj, rect) {
-    return (
-      obj.x > rect.x &&
-      obj.x < rect.x + rect.w &&
-      obj.y > rect.y &&
-      obj.y < rect.y + rect.h
-    );
   }
 }

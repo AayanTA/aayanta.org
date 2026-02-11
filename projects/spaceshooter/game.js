@@ -3,6 +3,8 @@ import { Missile } from "./missile.js";
 import { Track } from "./track.js";
 import { WIDTH, HEIGHT } from "./constants.js";
 import { playSound } from "./sound.js";
+import { handleMissilePortals } from "./track.js";
+import { updateLap, applySpeedPads } from "./track.js";
 
 export class Game {
   constructor(ctx, keys) {
@@ -64,8 +66,21 @@ export class Game {
       this.track.applySpeedPads(p);
     });
 
+    players.forEach(p => {
+      applySpeedPads(p);
+      updateLap(p);
+    });
+
+    players.forEach(p => {
+      if (p.laps >= 10) {
+        gameState = "gameover";
+        winner = p.id;
+      }
+    });
+
     this.missiles.forEach(m => {
       m.update(this.track);
+      handleMissilePortals(missile);
 
       this.players.forEach(p => {
         if (p !== m.owner) {
@@ -98,5 +113,15 @@ export class Game {
 
     ctx.fillText(`P1: ${this.players[0].laps}`, 60, 25);
     ctx.fillText(`P2: ${this.players[1].laps}`, WIDTH - 120, 25);
+
+    if (gameState === "gameover") {
+      ctx.fillStyle = "#00ff88";
+      ctx.font = "40px monospace";
+      ctx.fillText(
+        `PLAYER ${winner + 1} WINS`,
+        canvas.width / 2 - 180,
+        canvas.height / 2
+      );
+    }
   }
 }
