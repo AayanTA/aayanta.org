@@ -8,7 +8,11 @@ export class Player {
         this.controls = controls;
 
         this.angle = 0;
-        this.speed = 0;
+
+        // TRUE velocity vector
+        this.vx = 0;
+        this.vy = 0;
+
         this.radius = 12;
 
         this.score = 0;
@@ -16,24 +20,31 @@ export class Player {
 
         this.shootCooldown = 0;
         this.particles = [];
+
+        this.driftFactor = 0.92;   // drifting retention
+        this.thrustPower = 0.25;
     }
 
     update(keys, track) {
+
         if (keys[this.controls.left]) this.angle -= 0.05;
         if (keys[this.controls.right]) this.angle += 0.05;
 
         if (keys[this.controls.up]) {
-            this.speed += 0.2;
+            this.vx += Math.cos(this.angle) * this.thrustPower;
+            this.vy += Math.sin(this.angle) * this.thrustPower;
             this.spawnParticle();
         }
 
-        this.speed *= 0.99;
+        // DRIFT PHYSICS (retain sideways momentum)
+        this.vx *= 0.99;
+        this.vy *= 0.99;
 
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
+        this.x += this.vx;
+        this.y += this.vy;
 
         track.handleWallCollision(this);
-        track.handlePortal(this);
+        track.handlePortal(this);      // ships do NOT teleport
         track.handleSpeedPad(this);
         track.updateLap(this);
 
@@ -53,7 +64,13 @@ export class Player {
 
         this.shootCooldown = 20;
 
-        return new Missile(this.x, this.y, this.angle);
+        return new Missile(
+            this.x,
+            this.y,
+            this.angle,
+            this.vx,
+            this.vy
+        );
     }
 
     spawnParticle() {

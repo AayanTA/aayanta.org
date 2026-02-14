@@ -8,7 +8,15 @@ export class Track {
         this.portalLeft = { x: 100, y: 250, w: 10, h: 100 };
         this.portalRight = { x: 690, y: 250, w: 10, h: 100 };
 
-        this.speedPad = { x: 350, y: 120, w: 100, h: 30 };
+        // SMALLER SPEED PAD
+        this.speedPad = {
+            x: 370,
+            y: 120,
+            w: 60,
+            h: 30,
+            boostX: 4,
+            boostY: 0
+        };
 
         this.checkpoints = [
             { x: 650, y: 300 },
@@ -25,16 +33,23 @@ export class Track {
         ctx.strokeRect(this.outer.x, this.outer.y, this.outer.w, this.outer.h);
         ctx.strokeRect(this.inner.x, this.inner.y, this.inner.w, this.inner.h);
 
+        // Portals
         ctx.fillStyle = "purple";
         ctx.fillRect(this.portalLeft.x, this.portalLeft.y, this.portalLeft.w, this.portalLeft.h);
         ctx.fillRect(this.portalRight.x, this.portalRight.y, this.portalRight.w, this.portalRight.h);
 
+        // Speed Pad
         ctx.fillStyle = "lime";
         ctx.fillRect(this.speedPad.x, this.speedPad.y, this.speedPad.w, this.speedPad.h);
 
-        ctx.fillStyle = "white";
-        ctx.fillRect(690, 250, 5, 100);
-        ctx.fillRect(105, 250, 5, 100);
+        // Arrow Indicator
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.moveTo(this.speedPad.x + 20, this.speedPad.y + 8);
+        ctx.lineTo(this.speedPad.x + 20, this.speedPad.y + 22);
+        ctx.lineTo(this.speedPad.x + 40, this.speedPad.y + 15);
+        ctx.closePath();
+        ctx.fill();
     }
 
     isWall(x, y) {
@@ -53,15 +68,53 @@ export class Track {
         return !inOuter || inInner;
     }
 
-    handleWallCollision(obj) {
-        if (this.isWall(obj.x, obj.y)) {
-            obj.x -= Math.cos(obj.angle) * obj.speed;
-            obj.y -= Math.sin(obj.angle) * obj.speed;
-            obj.speed *= -0.5;
+    // Proper momentum reflection
+    handleWallCollision(player) {
+        if (this.isWall(player.x, player.y)) {
+
+            // Determine normal
+            let nx = 0;
+            let ny = 0;
+
+            if (player.x <= this.outer.x || player.x >= this.outer.x + this.outer.w)
+                nx = -1;
+            if (player.y <= this.outer.y || player.y >= this.outer.y + this.outer.h)
+                ny = -1;
+
+            if (
+                player.x >= this.inner.x &&
+                player.x <= this.inner.x + this.inner.w
+            ) nx = 1;
+
+            if (
+                player.y >= this.inner.y &&
+                player.y <= this.inner.y + this.inner.h
+            ) ny = 1;
+
+            const dot = player.vx * nx + player.vy * ny;
+
+            player.vx -= 2 * dot * nx;
+            player.vy -= 2 * dot * ny;
+
+            player.vx *= 0.9;
+            player.vy *= 0.9;
         }
     }
 
+    handleMissileWallBounce(missile) {
+        if (this.isWall(missile.x, missile.y)) {
+            missile.vx *= -1;
+            missile.vy *= -1;
+        }
+    }
+
+    // Ships do NOT teleport
     handlePortal(obj) {
+
+        const isMissile = obj.radius === 4;
+
+        if (!isMissile) return;
+
         if (
             obj.x < this.portalLeft.x + this.portalLeft.w &&
             obj.y > this.portalLeft.y &&
@@ -86,8 +139,8 @@ export class Track {
             player.y > this.speedPad.y &&
             player.y < this.speedPad.y + this.speedPad.h
         ) {
-            player.speed = 8;
-            player.angle = 0; // fixed direction boost
+            player.vx += this.speedPad.boostX;
+            player.vy += this.speedPad.boostY;
         }
     }
 
