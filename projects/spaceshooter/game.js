@@ -2,11 +2,13 @@ import { Player } from "./player.js";
 import { Track } from "./track.js";
 
 export class Game {
+
     constructor(canvas, ctx) {
+
         this.canvas = canvas;
         this.ctx = ctx;
 
-        this.track = new Track(canvas);
+        this.track = new Track();
 
         this.players = [
             new Player(180, 300, "cyan", {
@@ -26,13 +28,14 @@ export class Game {
         ];
 
         this.missiles = [];
-        this.keys = {};
 
         this.frame = 0;
         this.gameTime = 0;
 
         this.maxLaps = 3;
         this.winner = null;
+
+        this.keys = {};
 
         window.addEventListener("keydown", e => this.keys[e.code] = true);
         window.addEventListener("keyup", e => this.keys[e.code] = false);
@@ -54,6 +57,7 @@ export class Game {
             }
 
             if (player.completedLap) {
+
                 player.completedLap = false;
 
                 if (!player.bestLap || player.lapTime < player.bestLap) {
@@ -77,8 +81,6 @@ export class Game {
     }
 
     draw() {
-
-        this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
 
         this.track.draw(this.ctx);
 

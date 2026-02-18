@@ -1,58 +1,53 @@
 export class Track {
 
-    constructor(canvas){
+    constructor() {
 
-        this.outer={x:100,y:100,w:600,h:400};
-        this.inner={x:300,y:200,w:200,h:200};
+        this.outer = { x:100, y:100, w:600, h:400 };
+        this.inner = { x:300, y:200, w:200, h:200 };
 
-        // START LINE (horizontal left)
-        this.startY=300;
-        this.startX1=this.outer.x;
-        this.startX2=this.inner.x;
+        this.startY = 300;
+        this.startX1 = this.outer.x;
+        this.startX2 = this.inner.x;
 
-        // CP1 (horizontal right)
-        this.cp1Y=300;
-        this.cp1X1=this.inner.x+this.inner.w;
-        this.cp1X2=this.outer.x+this.outer.w;
+        this.cp1Y = 300;
+        this.cp1X1 = this.inner.x + this.inner.w;
+        this.cp1X2 = this.outer.x + this.outer.w;
 
-        // CP2 (vertical bottom center)
-        this.cp2X=400;
-        this.cp2Y1=this.inner.y+this.inner.h;
-        this.cp2Y2=this.outer.y+this.outer.h;
+        this.cp2X = 400;
+        this.cp2Y1 = this.inner.y + this.inner.h;
+        this.cp2Y2 = this.outer.y + this.outer.h;
     }
 
-    draw(ctx){
+    draw(ctx) {
 
-        ctx.strokeStyle="white";
-        ctx.lineWidth=4;
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 4;
 
-        ctx.strokeRect(this.outer.x,this.outer.y,this.outer.w,this.outer.h);
-        ctx.strokeRect(this.inner.x,this.inner.y,this.inner.w,this.inner.h);
+        ctx.strokeRect(this.outer.x, this.outer.y, this.outer.w, this.outer.h);
+        ctx.strokeRect(this.inner.x, this.inner.y, this.inner.w, this.inner.h);
 
-        ctx.fillStyle="yellow";
-        ctx.fillRect(this.startX1,this.startY-3,this.startX2-this.startX1,6);
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(this.startX1, this.startY-3, this.startX2-this.startX1, 6);
 
-        ctx.fillStyle="red";
-        ctx.fillRect(this.cp1X1,this.cp1Y-3,this.cp1X2-this.cp1X1,6);
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.cp1X1, this.cp1Y-3, this.cp1X2-this.cp1X1, 6);
 
-        ctx.fillStyle="blue";
-        ctx.fillRect(this.cp2X-3,this.cp2Y1,6,this.cp2Y2-this.cp2Y1);
+        ctx.fillStyle = "blue";
+        ctx.fillRect(this.cp2X-3, this.cp2Y1, 6, this.cp2Y2-this.cp2Y1);
     }
 
-    handleWallCollision(p){
+    handleWallCollision(p) {
 
         const o=this.outer;
         const i=this.inner;
 
-        if(p.x-p.radius<o.x){p.x=o.x+p.radius;p.vx=Math.abs(p.vx)*0.8;}
-        if(p.x+p.radius>o.x+o.w){p.x=o.x+o.w-p.radius;p.vx=-Math.abs(p.vx)*0.8;}
-        if(p.y-p.radius<o.y){p.y=o.y+p.radius;p.vy=Math.abs(p.vy)*0.8;}
-        if(p.y+p.radius>o.y+o.h){p.y=o.y+o.h-p.radius;p.vy=-Math.abs(p.vy)*0.8;}
+        if (p.x-p.radius<o.x){p.x=o.x+p.radius;p.vx=Math.abs(p.vx)*0.8;}
+        if (p.x+p.radius>o.x+o.w){p.x=o.x+o.w-p.radius;p.vx=-Math.abs(p.vx)*0.8;}
+        if (p.y-p.radius<o.y){p.y=o.y+p.radius;p.vy=Math.abs(p.vy)*0.8;}
+        if (p.y+p.radius>o.y+o.h){p.y=o.y+o.h-p.radius;p.vy=-Math.abs(p.vy)*0.8;}
 
-        if(
-            p.x>i.x && p.x<i.x+i.w &&
-            p.y>i.y && p.y<i.y+i.h
-        ){
+        if (p.x>i.x && p.x<i.x+i.w && p.y>i.y && p.y<i.y+i.h){
+
             const dx=p.x-(i.x+i.w/2);
             const dy=p.y-(i.y+i.h/2);
 
@@ -92,10 +87,6 @@ export class Track {
 
     updateLap(p){
 
-        // WRONG direction resets
-        if(p.lapState===0 && p.x>this.cp1X1) p.lapState=0;
-
-        // CP1
         if(
             p.y>this.cp1Y-5 && p.y<this.cp1Y+5 &&
             p.x>this.cp1X1 && p.x<this.cp1X2
@@ -103,7 +94,6 @@ export class Track {
             if(p.lapState===0) p.lapState=1;
         }
 
-        // CP2
         if(
             p.x>this.cp2X-5 && p.x<this.cp2X+5 &&
             p.y>this.cp2Y1 && p.y<this.cp2Y2
@@ -111,7 +101,6 @@ export class Track {
             if(p.lapState===1) p.lapState=2;
         }
 
-        // Finish
         if(
             p.y>this.startY-5 && p.y<this.startY+5 &&
             p.x>this.startX1 && p.x<this.startX2
