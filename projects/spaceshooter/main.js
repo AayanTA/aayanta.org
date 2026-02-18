@@ -1,59 +1,68 @@
 import { Game } from "./game.js";
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+window.addEventListener("DOMContentLoaded", () => {
 
-let state = "menu";
-let game = null;
+    const canvas = document.getElementById("game");
 
-window.addEventListener("keydown", e => {
-
-    if (state === "menu" && e.code === "Space") {
-        game = new Game(canvas, ctx);
-        state = "playing";
+    if (!canvas) {
+        console.error("Canvas element with id='game' not found.");
+        return;
     }
 
-    if (state === "end" && e.code === "Space") {
-        state = "menu";
-        game = null;
-    }
-});
+    const ctx = canvas.getContext("2d");
 
-function loop() {
+    let state = "menu";
+    let game = null;
 
-    requestAnimationFrame(loop);
+    window.addEventListener("keydown", e => {
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (state === "menu" && e.code === "Space") {
+            game = new Game(canvas, ctx);
+            state = "playing";
+        }
 
-    if (state === "menu") {
+        if (state === "end" && e.code === "Space") {
+            state = "menu";
+            game = null;
+        }
+    });
 
-        ctx.fillStyle = "white";
-        ctx.font = "48px Arial";
-        ctx.fillText("SPACE RACERS", 230, 250);
+    function loop() {
 
-        ctx.font = "20px Arial";
-        ctx.fillText("Press SPACE to Start", 300, 300);
-    }
+        requestAnimationFrame(loop);
 
-    else if (state === "playing" && game) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        game.update();
-        game.draw();
+        if (state === "menu") {
 
-        if (game.winner) {
-            state = "end";
+            ctx.fillStyle = "white";
+            ctx.font = "48px Arial";
+            ctx.fillText("SPACE RACERS", 230, 250);
+
+            ctx.font = "20px Arial";
+            ctx.fillText("Press SPACE to Start", 300, 300);
+        }
+
+        else if (state === "playing" && game) {
+
+            game.update();
+            game.draw();
+
+            if (game.winner) {
+                state = "end";
+            }
+        }
+
+        else if (state === "end" && game) {
+
+            ctx.fillStyle = "white";
+            ctx.font = "48px Arial";
+            ctx.fillText(`${game.winner.color.toUpperCase()} WINS`, 240, 250);
+
+            ctx.font = "20px Arial";
+            ctx.fillText("Press SPACE for Menu", 280, 300);
         }
     }
 
-    else if (state === "end" && game) {
-
-        ctx.fillStyle = "white";
-        ctx.font = "48px Arial";
-        ctx.fillText(`${game.winner.color.toUpperCase()} WINS`, 240, 250);
-
-        ctx.font = "20px Arial";
-        ctx.fillText("Press SPACE for Menu", 280, 300);
-    }
-}
-
-loop();
+    loop();
+});
