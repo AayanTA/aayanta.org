@@ -1,60 +1,63 @@
 export class Missile {
-    constructor(x, y, angle, parentVx, parentVy, owner, color) {
-        this.x = x;
-        this.y = y;
 
-        const speed = 7;
+    constructor(x,y,angle,pvx,pvy,owner,color){
 
-        this.vx = Math.cos(angle) * speed + parentVx;
-        this.vy = Math.sin(angle) * speed + parentVy;
+        const speed=7;
 
-        this.radius = 4;
-        this.life = 300;
-        this.dead = false;
+        this.x=x;
+        this.y=y;
 
-        this.owner = owner;
-        this.color = color;
+        this.vx=Math.cos(angle)*speed+pvx;
+        this.vy=Math.sin(angle)*speed+pvy;
+
+        this.radius=4;
+        this.owner=owner;
+        this.color=color;
+
+        this.life=300;
+        this.dead=false;
     }
 
-    update(track, players) {
+    update(track,players){
 
-        if (this.dead) return;
+        if(this.dead)return;
 
-        this.x += this.vx;
-        this.y += this.vy;
+        this.x+=this.vx;
+        this.y+=this.vy;
 
-        const normal = track.getWallNormal(this.x, this.y, this.radius);
+        const normal=track.getWallNormal(this.x,this.y,this.radius);
 
-        if (normal) {
-            const dot = this.vx * normal.x + this.vy * normal.y;
-            this.vx -= 2 * dot * normal.x;
-            this.vy -= 2 * dot * normal.y;
+        if(normal){
+            const dot=this.vx*normal.x+this.vy*normal.y;
+            this.vx-=2*dot*normal.x;
+            this.vy-=2*dot*normal.y;
         }
 
-        players.forEach(player => {
-            if (player === this.owner) return; // no self-stun
+        for(const p of players){
 
-            const dx = this.x - player.x;
-            const dy = this.y - player.y;
+            if(p===this.owner)continue;
 
-            if (Math.hypot(dx, dy) < player.radius + this.radius) {
-                player.stun();
-                this.dead = true;
+            const dx=this.x-p.x;
+            const dy=this.y-p.y;
+
+            if(Math.hypot(dx,dy)<p.radius+this.radius){
+                p.stun();
+                this.dead=true;
                 this.owner.activeMissiles--;
             }
-        });
+        }
 
         this.life--;
-        if (this.life <= 0 && !this.dead) {
-            this.dead = true;
+        if(this.life<=0 && !this.dead){
+            this.dead=true;
             this.owner.activeMissiles--;
         }
     }
 
-    draw(ctx) {
-        ctx.fillStyle = this.color;
+    draw(ctx){
+        ctx.fillStyle=this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
         ctx.fill();
     }
 }

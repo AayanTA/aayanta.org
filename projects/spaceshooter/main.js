@@ -1,27 +1,52 @@
 import { Game } from "./game.js";
 
-function init() {
-    const canvas = document.getElementById("gameCanvas");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
-    if (!canvas) {
-        console.error("Canvas not found. Check your HTML id.");
-        return;
+let state="menu";
+let game=null;
+
+window.addEventListener("keydown",e=>{
+    if(state==="menu" && e.code==="Space"){
+        game=new Game(canvas,ctx);
+        state="playing";
     }
 
-    const ctx = canvas.getContext("2d");
-    const game = new Game(canvas, ctx);
+    if(state==="end" && e.code==="Space"){
+        state="menu";
+    }
+});
 
-    function loop() {
+function loop(){
+
+    requestAnimationFrame(loop);
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(state==="menu"){
+        ctx.fillStyle="white";
+        ctx.font="40px Arial";
+        ctx.fillText("SPACE RACERS",260,220);
+        ctx.font="20px Arial";
+        ctx.fillText("Press SPACE to Start",300,260);
+    }
+
+    if(state==="playing"){
         game.update();
         game.draw();
-        requestAnimationFrame(loop);
+
+        if(game.winner){
+            state="end";
+        }
     }
 
-    loop();
+    if(state==="end"){
+        ctx.fillStyle="white";
+        ctx.font="40px Arial";
+        ctx.fillText(`${game.winner.color.toUpperCase()} WINS`,260,220);
+        ctx.font="20px Arial";
+        ctx.fillText("Press SPACE for Menu",280,260);
+    }
 }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-} else {
-    init();
-}
+loop();

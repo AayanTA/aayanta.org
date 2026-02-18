@@ -8,16 +8,15 @@ export class Game {
 
         this.track = new Track(canvas);
 
-        // Both players start on LEFT side
         this.players = [
-            new Player(140, 300, "cyan", {
+            new Player(180, 300, "cyan", {
                 up: "KeyW",
                 left: "KeyA",
                 right: "KeyD",
                 shoot: "ShiftLeft",
                 drift: "KeyS"
             }),
-            new Player(140, 360, "orange", {
+            new Player(180, 340, "orange", {
                 up: "ArrowUp",
                 left: "ArrowLeft",
                 right: "ArrowRight",
@@ -29,8 +28,11 @@ export class Game {
         this.missiles = [];
         this.keys = {};
 
-        this.frameCount = 0;
+        this.frame = 0;
         this.gameTime = 0;
+
+        this.maxLaps = 3;
+        this.winner = null;
 
         window.addEventListener("keydown", e => this.keys[e.code] = true);
         window.addEventListener("keyup", e => this.keys[e.code] = false);
@@ -38,53 +40,61 @@ export class Game {
 
     update() {
 
-        this.frameCount++;
-        this.gameTime = this.frameCount / 60;
+        this.frame++;
+        this.gameTime = this.frame / 60;
 
-        this.players.forEach(player => {
+        for (const player of this.players) {
 
             player.lapTime += 1/60;
             player.update(this.keys, this.track);
 
             if (this.keys[player.controls.shoot]) {
-                const missile = player.tryShoot();
-                if (missile) {
-                    this.missiles.push(missile);
-                }
+                const m = player.tryShoot();
+                if (m) this.missiles.push(m);
             }
 
             if (player.completedLap) {
                 player.completedLap = false;
-                player.lastLapTime = player.lapTime;
+
+                if (!player.bestLap || player.lapTime < player.bestLap) {
+                    player.bestLap = player.lapTime;
+                }
+
+                player.lastLap = player.lapTime;
                 player.lapTime = 0;
             }
-        });
 
-        this.missiles.forEach(m =>
-            m.update(this.track, this.players)
-        );
+            if (player.score >= this.maxLaps) {
+                this.winner = player;
+            }
+        }
+
+        for (const m of this.missiles) {
+            m.update(this.track, this.players);
+        }
 
         this.missiles = this.missiles.filter(m => !m.dead);
     }
 
     draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
 
         this.track.draw(this.ctx);
 
-        this.players.forEach(p => p.draw(this.ctx));
-        this.missiles.forEach(m => m.draw(this.ctx));
+        for (const p of this.players) p.draw(this.ctx);
+        for (const m of this.missiles) m.draw(this.ctx);
 
         this.ctx.fillStyle = "white";
         this.ctx.font = "16px Arial";
 
-        this.ctx.fillText(`Game Time: ${this.gameTime.toFixed(1)}s`, 20, 20);
+        this.ctx.fillText(`Time: ${this.gameTime.toFixed(1)}s`, 20, 20);
 
-        this.players.forEach((p, i) => {
+        this.players.forEach((p,i) => {
             this.ctx.fillText(
-                `P${i+1}: ${p.score} | Lap: ${p.lapTime.toFixed(1)}s`,
+                `P${i+1} Laps:${p.score} Lap:${p.lapTime.toFixed(1)} Best:${p.bestLap ? p.bestLap.toFixed(1) : "-"}`,
                 20,
-                45 + i * 20
+                45 + i*20
             );
         });
     }
