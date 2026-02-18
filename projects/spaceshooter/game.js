@@ -28,13 +28,17 @@ export class Game {
         this.keys = {};
         this.gameOver = false;
 
-        this.countdown = 180; // 3 seconds
+        this.countdown = 180;
+
+        this.frameCount = 0;
+        this.gameTime = 0;
 
         window.addEventListener("keydown", e => this.keys[e.code] = true);
         window.addEventListener("keyup", e => this.keys[e.code] = false);
     }
 
     update() {
+
         if (this.countdown > 0) {
             this.countdown--;
             return;
@@ -42,7 +46,12 @@ export class Game {
 
         if (this.gameOver) return;
 
+        this.frameCount++;
+        this.gameTime = this.frameCount / 60;
+
         this.players.forEach(player => {
+            player.lapTime += 1/60;
+
             player.update(this.keys, this.track);
 
             if (this.keys[player.controls.shoot]) {
@@ -50,12 +59,21 @@ export class Game {
                 if (missile) this.missiles.push(missile);
             }
 
+            if (player.completedLap) {
+                player.completedLap = false;
+                player.lastLapTime = player.lapTime;
+                player.lapTime = 0;
+            }
+
             if (player.score >= 10) {
                 this.gameOver = true;
             }
         });
 
-        this.missiles.forEach(m => m.update(this.track));
+        this.missiles.forEach(m =>
+            m.update(this.track, this.players)
+        );
+
         this.missiles = this.missiles.filter(m => !m.dead);
     }
 
@@ -68,24 +86,16 @@ export class Game {
         this.missiles.forEach(m => m.draw(this.ctx));
 
         this.ctx.fillStyle = "white";
-        this.ctx.font = "18px Arial";
+        this.ctx.font = "16px Arial";
+
+        this.ctx.fillText(`Game Time: ${this.gameTime.toFixed(1)}s`, 20, 20);
 
         this.players.forEach((p, i) => {
-            this.ctx.fillText(`P${i+1}: ${p.score}`, 20, 30 + i * 25);
-        });
-
-        if (this.countdown > 0) {
-            this.ctx.font = "60px Arial";
             this.ctx.fillText(
-                Math.ceil(this.countdown / 60),
-                this.canvas.width / 2 - 15,
-                this.canvas.height / 2
+                `P${i+1}: ${p.score} | Lap: ${p.lapTime.toFixed(1)}s | Last: ${p.lastLapTime?.toFixed(1) ?? 0}s`,
+                20,
+                45 + i * 20
             );
-        }
-
-        if (this.gameOver) {
-            this.ctx.font = "50px Arial";
-            this.ctx.fillText("GAME OVER", 240, 300);
-        }
+        });
     }
 }

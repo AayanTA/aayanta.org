@@ -41,89 +41,33 @@ export class Track {
         ctx.fill();
     }
 
-    isInsideOuter(x, y) {
-        return (
-            x > this.outer.x &&
-            x < this.outer.x + this.outer.w &&
-            y > this.outer.y &&
-            y < this.outer.y + this.outer.h
-        );
-    }
+    getWallNormal(x, y, r) {
 
-    isInsideInner(x, y) {
-        return (
+        if (x - r < this.outer.x) return { x: 1, y: 0 };
+        if (x + r > this.outer.x + this.outer.w) return { x: -1, y: 0 };
+        if (y - r < this.outer.y) return { x: 0, y: 1 };
+        if (y + r > this.outer.y + this.outer.h) return { x: 0, y: -1 };
+
+        if (
             x > this.inner.x &&
             x < this.inner.x + this.inner.w &&
             y > this.inner.y &&
             y < this.inner.y + this.inner.h
-        );
-    }
+        ) {
+            const left = Math.abs(x - this.inner.x);
+            const right = Math.abs(x - (this.inner.x + this.inner.w));
+            const top = Math.abs(y - this.inner.y);
+            const bottom = Math.abs(y - (this.inner.y + this.inner.h));
 
-    handleWallCollision(player) {
+            const min = Math.min(left, right, top, bottom);
 
-        // Outer walls
-        if (player.x - player.radius < this.outer.x) {
-            player.x = this.outer.x + player.radius;
-            player.vx = Math.abs(player.vx) * 0.8;
+            if (min === left) return { x: -1, y: 0 };
+            if (min === right) return { x: 1, y: 0 };
+            if (min === top) return { x: 0, y: -1 };
+            if (min === bottom) return { x: 0, y: 1 };
         }
 
-        if (player.x + player.radius > this.outer.x + this.outer.w) {
-            player.x = this.outer.x + this.outer.w - player.radius;
-            player.vx = -Math.abs(player.vx) * 0.8;
-        }
-
-        if (player.y - player.radius < this.outer.y) {
-            player.y = this.outer.y + player.radius;
-            player.vy = Math.abs(player.vy) * 0.8;
-        }
-
-        if (player.y + player.radius > this.outer.y + this.outer.h) {
-            player.y = this.outer.y + this.outer.h - player.radius;
-            player.vy = -Math.abs(player.vy) * 0.8;
-        }
-
-        // Inner obstacle
-        if (this.isInsideInner(player.x, player.y)) {
-
-            const leftDist = Math.abs(player.x - this.inner.x);
-            const rightDist = Math.abs(player.x - (this.inner.x + this.inner.w));
-            const topDist = Math.abs(player.y - this.inner.y);
-            const bottomDist = Math.abs(player.y - (this.inner.y + this.inner.h));
-
-            const min = Math.min(leftDist, rightDist, topDist, bottomDist);
-
-            if (min === leftDist) {
-                player.x = this.inner.x - player.radius;
-                player.vx = -Math.abs(player.vx) * 0.8;
-            } else if (min === rightDist) {
-                player.x = this.inner.x + this.inner.w + player.radius;
-                player.vx = Math.abs(player.vx) * 0.8;
-            } else if (min === topDist) {
-                player.y = this.inner.y - player.radius;
-                player.vy = -Math.abs(player.vy) * 0.8;
-            } else {
-                player.y = this.inner.y + this.inner.h + player.radius;
-                player.vy = Math.abs(player.vy) * 0.8;
-            }
-        }
-    }
-
-    handleMissileWallBounce(missile) {
-
-        if (missile.x - missile.radius < this.outer.x ||
-            missile.x + missile.radius > this.outer.x + this.outer.w) {
-            missile.vx *= -1;
-        }
-
-        if (missile.y - missile.radius < this.outer.y ||
-            missile.y + missile.radius > this.outer.y + this.outer.h) {
-            missile.vy *= -1;
-        }
-
-        if (this.isInsideInner(missile.x, missile.y)) {
-            missile.vx *= -1;
-            missile.vy *= -1;
-        }
+        return null;
     }
 
     handleSpeedPad(player) {
@@ -145,9 +89,11 @@ export class Track {
 
         if (Math.hypot(dx, dy) < 40) {
             player.checkpointIndex++;
+
             if (player.checkpointIndex >= this.checkpoints.length) {
                 player.checkpointIndex = 0;
                 player.score++;
+                player.completedLap = true;
             }
         }
     }

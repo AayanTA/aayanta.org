@@ -9,7 +9,7 @@ export class Missile {
         this.vy = Math.sin(angle) * speed + parentVy;
 
         this.radius = 4;
-        this.life = 300; // 5 seconds at 60fps
+        this.life = 300;
         this.dead = false;
     }
 
@@ -19,9 +19,15 @@ export class Missile {
         this.x += this.vx;
         this.y += this.vy;
 
-        track.handleMissileWallBounce(this);
+        const normal = track.getWallNormal(this.x, this.y, this.radius);
 
-        // Check player collisions
+        if (normal) {
+            const dot = this.vx * normal.x + this.vy * normal.y;
+
+            this.vx -= 2 * dot * normal.x;
+            this.vy -= 2 * dot * normal.y;
+        }
+
         players.forEach(player => {
             const dx = this.x - player.x;
             const dy = this.y - player.y;
@@ -32,9 +38,7 @@ export class Missile {
         });
 
         this.life--;
-        if (this.life <= 0) {
-            this.dead = true;
-        }
+        if (this.life <= 0) this.dead = true;
     }
 
     draw(ctx) {
