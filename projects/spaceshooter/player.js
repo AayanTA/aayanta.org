@@ -15,7 +15,6 @@ export class Player {
         this.radius = 12;
 
         this.score = 0;
-        this.checkpointIndex = 0;
 
         this.lapTime = 0;
         this.lastLapTime = 0;
@@ -24,11 +23,15 @@ export class Player {
         this.shootCooldown = 0;
         this.stunTimer = 0;
 
+        this.activeMissiles = 0; // max 3
+
         this.thrustPower = 0.25;
         this.maxSpeed = 6;
 
         this.driftGrip = 0.985;
         this.normalGrip = 0.94;
+
+        this.lapState = 0; // 0=start, 1=cp1 passed, 2=cp2 passed
     }
 
     update(keys, track) {
@@ -47,14 +50,11 @@ export class Player {
         }
 
         const drifting = keys[this.controls.drift];
-
-        // Grip system (drift = more sideways retention)
         const grip = drifting ? this.driftGrip : this.normalGrip;
 
         this.vx *= grip;
         this.vy *= grip;
 
-        // Speed cap
         const speed = Math.hypot(this.vx, this.vy);
         if (speed > this.maxSpeed) {
             const scale = this.maxSpeed / speed;
@@ -73,16 +73,21 @@ export class Player {
     }
 
     tryShoot() {
-        if (this.shootCooldown > 0 || this.stunTimer > 0) return null;
+        if (this.shootCooldown > 0) return null;
+        if (this.activeMissiles >= 3) return null;
+        if (this.stunTimer > 0) return null;
 
         this.shootCooldown = 20;
+        this.activeMissiles++;
 
         return new Missile(
             this.x,
             this.y,
             this.angle,
             this.vx,
-            this.vy
+            this.vy,
+            this,
+            this.color
         );
     }
 

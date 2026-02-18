@@ -1,5 +1,5 @@
 export class Missile {
-    constructor(x, y, angle, parentVx, parentVy) {
+    constructor(x, y, angle, parentVx, parentVy, owner, color) {
         this.x = x;
         this.y = y;
 
@@ -11,6 +11,9 @@ export class Missile {
         this.radius = 4;
         this.life = 300;
         this.dead = false;
+
+        this.owner = owner;
+        this.color = color;
     }
 
     update(track, players) {
@@ -29,20 +32,27 @@ export class Missile {
         }
 
         players.forEach(player => {
+            if (player === this.owner) return; // no self-stun
+
             const dx = this.x - player.x;
             const dy = this.y - player.y;
+
             if (Math.hypot(dx, dy) < player.radius + this.radius) {
                 player.stun();
                 this.dead = true;
+                this.owner.activeMissiles--;
             }
         });
 
         this.life--;
-        if (this.life <= 0) this.dead = true;
+        if (this.life <= 0 && !this.dead) {
+            this.dead = true;
+            this.owner.activeMissiles--;
+        }
     }
 
     draw(ctx) {
-        ctx.fillStyle = "red";
+        ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fill();

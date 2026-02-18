@@ -8,15 +8,16 @@ export class Game {
 
         this.track = new Track(canvas);
 
+        // Both players start on LEFT side
         this.players = [
-            new Player(150, 300, "cyan", {
+            new Player(140, 300, "cyan", {
                 up: "KeyW",
                 left: "KeyA",
                 right: "KeyD",
                 shoot: "ShiftLeft",
                 drift: "KeyS"
             }),
-            new Player(650, 300, "orange", {
+            new Player(140, 360, "orange", {
                 up: "ArrowUp",
                 left: "ArrowLeft",
                 right: "ArrowRight",
@@ -42,12 +43,14 @@ export class Game {
 
         this.players.forEach(player => {
 
-            player.lapTime += 1 / 60;
+            player.lapTime += 1/60;
             player.update(this.keys, this.track);
 
             if (this.keys[player.controls.shoot]) {
                 const missile = player.tryShoot();
-                if (missile) this.missiles.push(missile);
+                if (missile) {
+                    this.missiles.push(missile);
+                }
             }
 
             if (player.completedLap) {
