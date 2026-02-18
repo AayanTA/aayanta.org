@@ -5,10 +5,6 @@ export class Track {
         this.outer = { x: 100, y: 100, w: 600, h: 400 };
         this.inner = { x: 300, y: 200, w: 200, h: 200 };
 
-        this.portalLeft = { x: 100, y: 250, w: 10, h: 100 };
-        this.portalRight = { x: 690, y: 250, w: 10, h: 100 };
-
-        // SMALLER SPEED PAD
         this.speedPad = {
             x: 370,
             y: 120,
@@ -33,16 +29,9 @@ export class Track {
         ctx.strokeRect(this.outer.x, this.outer.y, this.outer.w, this.outer.h);
         ctx.strokeRect(this.inner.x, this.inner.y, this.inner.w, this.inner.h);
 
-        // Portals
-        ctx.fillStyle = "purple";
-        ctx.fillRect(this.portalLeft.x, this.portalLeft.y, this.portalLeft.w, this.portalLeft.h);
-        ctx.fillRect(this.portalRight.x, this.portalRight.y, this.portalRight.w, this.portalRight.h);
-
-        // Speed Pad
         ctx.fillStyle = "lime";
         ctx.fillRect(this.speedPad.x, this.speedPad.y, this.speedPad.w, this.speedPad.h);
 
-        // Arrow Indicator
         ctx.fillStyle = "black";
         ctx.beginPath();
         ctx.moveTo(this.speedPad.x + 20, this.speedPad.y + 8);
@@ -52,83 +41,88 @@ export class Track {
         ctx.fill();
     }
 
-    isWall(x, y) {
-        const inOuter =
+    isInsideOuter(x, y) {
+        return (
             x > this.outer.x &&
             x < this.outer.x + this.outer.w &&
             y > this.outer.y &&
-            y < this.outer.y + this.outer.h;
+            y < this.outer.y + this.outer.h
+        );
+    }
 
-        const inInner =
+    isInsideInner(x, y) {
+        return (
             x > this.inner.x &&
             x < this.inner.x + this.inner.w &&
             y > this.inner.y &&
-            y < this.inner.y + this.inner.h;
-
-        return !inOuter || inInner;
+            y < this.inner.y + this.inner.h
+        );
     }
 
-    // Proper momentum reflection
     handleWallCollision(player) {
-        if (this.isWall(player.x, player.y)) {
 
-            // Determine normal
-            let nx = 0;
-            let ny = 0;
+        // Outer walls
+        if (player.x - player.radius < this.outer.x) {
+            player.x = this.outer.x + player.radius;
+            player.vx = Math.abs(player.vx) * 0.8;
+        }
 
-            if (player.x <= this.outer.x || player.x >= this.outer.x + this.outer.w)
-                nx = -1;
-            if (player.y <= this.outer.y || player.y >= this.outer.y + this.outer.h)
-                ny = -1;
+        if (player.x + player.radius > this.outer.x + this.outer.w) {
+            player.x = this.outer.x + this.outer.w - player.radius;
+            player.vx = -Math.abs(player.vx) * 0.8;
+        }
 
-            if (
-                player.x >= this.inner.x &&
-                player.x <= this.inner.x + this.inner.w
-            ) nx = 1;
+        if (player.y - player.radius < this.outer.y) {
+            player.y = this.outer.y + player.radius;
+            player.vy = Math.abs(player.vy) * 0.8;
+        }
 
-            if (
-                player.y >= this.inner.y &&
-                player.y <= this.inner.y + this.inner.h
-            ) ny = 1;
+        if (player.y + player.radius > this.outer.y + this.outer.h) {
+            player.y = this.outer.y + this.outer.h - player.radius;
+            player.vy = -Math.abs(player.vy) * 0.8;
+        }
 
-            const dot = player.vx * nx + player.vy * ny;
+        // Inner obstacle
+        if (this.isInsideInner(player.x, player.y)) {
 
-            player.vx -= 2 * dot * nx;
-            player.vy -= 2 * dot * ny;
+            const leftDist = Math.abs(player.x - this.inner.x);
+            const rightDist = Math.abs(player.x - (this.inner.x + this.inner.w));
+            const topDist = Math.abs(player.y - this.inner.y);
+            const bottomDist = Math.abs(player.y - (this.inner.y + this.inner.h));
 
-            player.vx *= 0.9;
-            player.vy *= 0.9;
+            const min = Math.min(leftDist, rightDist, topDist, bottomDist);
+
+            if (min === leftDist) {
+                player.x = this.inner.x - player.radius;
+                player.vx = -Math.abs(player.vx) * 0.8;
+            } else if (min === rightDist) {
+                player.x = this.inner.x + this.inner.w + player.radius;
+                player.vx = Math.abs(player.vx) * 0.8;
+            } else if (min === topDist) {
+                player.y = this.inner.y - player.radius;
+                player.vy = -Math.abs(player.vy) * 0.8;
+            } else {
+                player.y = this.inner.y + this.inner.h + player.radius;
+                player.vy = Math.abs(player.vy) * 0.8;
+            }
         }
     }
 
     handleMissileWallBounce(missile) {
-        if (this.isWall(missile.x, missile.y)) {
+
+        if (missile.x - missile.radius < this.outer.x ||
+            missile.x + missile.radius > this.outer.x + this.outer.w) {
             missile.vx *= -1;
+        }
+
+        if (missile.y - missile.radius < this.outer.y ||
+            missile.y + missile.radius > this.outer.y + this.outer.h) {
             missile.vy *= -1;
         }
-    }
 
-    // Ships do NOT teleport
-    handlePortal(obj) {
-
-        const isMissile = obj.radius === 4;
-
-        if (!isMissile) return;
-
-        if (
-            obj.x < this.portalLeft.x + this.portalLeft.w &&
-            obj.y > this.portalLeft.y &&
-            obj.y < this.portalLeft.y + this.portalLeft.h
-        ) {
-            obj.x = this.portalRight.x - 20;
-        }
-
-        if (
-            obj.x > this.portalRight.x &&
-            obj.y > this.portalRight.y &&
-            obj.y < this.portalRight.y + this.portalRight.h
-        ) {
-            obj.x = this.portalLeft.x + 20;
+        if (this.isInsideInner(missile.x, missile.y)) {
+            missile.vx *= -1;
+            missile.vy *= -1;
         }
     }
 
@@ -151,7 +145,6 @@ export class Track {
 
         if (Math.hypot(dx, dy) < 40) {
             player.checkpointIndex++;
-
             if (player.checkpointIndex >= this.checkpoints.length) {
                 player.checkpointIndex = 0;
                 player.score++;

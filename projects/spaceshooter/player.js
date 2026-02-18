@@ -9,7 +9,6 @@ export class Player {
 
         this.angle = 0;
 
-        // TRUE velocity vector
         this.vx = 0;
         this.vy = 0;
 
@@ -19,48 +18,52 @@ export class Player {
         this.checkpointIndex = 0;
 
         this.shootCooldown = 0;
+        this.stunTimer = 0;
+
         this.particles = [];
 
-        this.driftFactor = 0.92;   // drifting retention
         this.thrustPower = 0.25;
+        this.maxSpeed = 6;
     }
 
     update(keys, track) {
 
-        if (keys[this.controls.left]) this.angle -= 0.05;
-        if (keys[this.controls.right]) this.angle += 0.05;
+        if (this.stunTimer > 0) {
+            this.stunTimer--;
+        } else {
+            if (keys[this.controls.left]) this.angle -= 0.05;
+            if (keys[this.controls.right]) this.angle += 0.05;
 
-        if (keys[this.controls.up]) {
-            this.vx += Math.cos(this.angle) * this.thrustPower;
-            this.vy += Math.sin(this.angle) * this.thrustPower;
-            this.spawnParticle();
+            if (keys[this.controls.up]) {
+                this.vx += Math.cos(this.angle) * this.thrustPower;
+                this.vy += Math.sin(this.angle) * this.thrustPower;
+            }
         }
 
-        // DRIFT PHYSICS (retain sideways momentum)
+        // Friction
         this.vx *= 0.99;
         this.vy *= 0.99;
+
+        // Clamp speed
+        const speed = Math.hypot(this.vx, this.vy);
+        if (speed > this.maxSpeed) {
+            const scale = this.maxSpeed / speed;
+            this.vx *= scale;
+            this.vy *= scale;
+        }
 
         this.x += this.vx;
         this.y += this.vy;
 
         track.handleWallCollision(this);
-        track.handlePortal(this);      // ships do NOT teleport
         track.handleSpeedPad(this);
         track.updateLap(this);
-
-        this.particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-        });
-
-        this.particles = this.particles.filter(p => p.life > 0);
 
         if (this.shootCooldown > 0) this.shootCooldown--;
     }
 
     tryShoot() {
-        if (this.shootCooldown > 0) return null;
+        if (this.shootCooldown > 0 || this.stunTimer > 0) return null;
 
         this.shootCooldown = 20;
 
@@ -73,27 +76,19 @@ export class Player {
         );
     }
 
-    spawnParticle() {
-        this.particles.push({
-            x: this.x,
-            y: this.y,
-            vx: -Math.cos(this.angle) * 2 + (Math.random() - 0.5),
-            vy: -Math.sin(this.angle) * 2 + (Math.random() - 0.5),
-            life: 20
-        });
+    stun() {
+        this.stunTimer = 60; // 1 second stun
+        this.vx *= 0.4;
+        this.vy *= 0.4;
     }
 
     draw(ctx) {
-        this.particles.forEach(p => {
-            ctx.fillStyle = "yellow";
-            ctx.fillRect(p.x, p.y, 2, 2);
-        });
-
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
 
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = this.stunTimer > 0 ? "gray" : this.color;
+
         ctx.beginPath();
         ctx.moveTo(15, 0);
         ctx.lineTo(-10, 8);

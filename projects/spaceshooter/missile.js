@@ -8,16 +8,33 @@ export class Missile {
         this.vx = Math.cos(angle) * speed + parentVx;
         this.vy = Math.sin(angle) * speed + parentVy;
 
-        this.dead = false;
         this.radius = 4;
+        this.life = 300; // 5 seconds at 60fps
+        this.dead = false;
     }
 
-    update(track) {
+    update(track, players) {
+        if (this.dead) return;
+
         this.x += this.vx;
         this.y += this.vy;
 
         track.handleMissileWallBounce(this);
-        track.handlePortal(this);   // missiles DO teleport
+
+        // Check player collisions
+        players.forEach(player => {
+            const dx = this.x - player.x;
+            const dy = this.y - player.y;
+            if (Math.hypot(dx, dy) < player.radius + this.radius) {
+                player.stun();
+                this.dead = true;
+            }
+        });
+
+        this.life--;
+        if (this.life <= 0) {
+            this.dead = true;
+        }
     }
 
     draw(ctx) {
