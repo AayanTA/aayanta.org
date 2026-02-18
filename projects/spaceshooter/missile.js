@@ -14,6 +14,7 @@ export class Missile {
     }
 
     update(track, players) {
+
         if (this.dead) return;
 
         this.x += this.vx;
@@ -23,7 +24,6 @@ export class Missile {
 
         if (normal) {
             const dot = this.vx * normal.x + this.vy * normal.y;
-
             this.vx -= 2 * dot * normal.x;
             this.vy -= 2 * dot * normal.y;
         }

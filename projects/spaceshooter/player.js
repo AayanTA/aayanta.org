@@ -17,13 +17,18 @@ export class Player {
         this.score = 0;
         this.checkpointIndex = 0;
 
+        this.lapTime = 0;
+        this.lastLapTime = 0;
+        this.completedLap = false;
+
         this.shootCooldown = 0;
         this.stunTimer = 0;
 
-        this.particles = [];
-
         this.thrustPower = 0.25;
         this.maxSpeed = 6;
+
+        this.driftGrip = 0.985;
+        this.normalGrip = 0.94;
     }
 
     update(keys, track) {
@@ -31,6 +36,7 @@ export class Player {
         if (this.stunTimer > 0) {
             this.stunTimer--;
         } else {
+
             if (keys[this.controls.left]) this.angle -= 0.05;
             if (keys[this.controls.right]) this.angle += 0.05;
 
@@ -40,11 +46,15 @@ export class Player {
             }
         }
 
-        // Friction
-        this.vx *= 0.99;
-        this.vy *= 0.99;
+        const drifting = keys[this.controls.drift];
 
-        // Clamp speed
+        // Grip system (drift = more sideways retention)
+        const grip = drifting ? this.driftGrip : this.normalGrip;
+
+        this.vx *= grip;
+        this.vy *= grip;
+
+        // Speed cap
         const speed = Math.hypot(this.vx, this.vy);
         if (speed > this.maxSpeed) {
             const scale = this.maxSpeed / speed;
@@ -77,7 +87,7 @@ export class Player {
     }
 
     stun() {
-        this.stunTimer = 60; // 1 second stun
+        this.stunTimer = 60;
         this.vx *= 0.4;
         this.vy *= 0.4;
     }

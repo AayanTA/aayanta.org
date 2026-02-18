@@ -41,6 +41,41 @@ export class Track {
         ctx.fill();
     }
 
+    handleWallCollision(player) {
+
+        // Outer walls
+        if (player.x - player.radius < this.outer.x) {
+            player.x = this.outer.x + player.radius;
+            player.vx = Math.abs(player.vx) * 0.8;
+        }
+
+        if (player.x + player.radius > this.outer.x + this.outer.w) {
+            player.x = this.outer.x + this.outer.w - player.radius;
+            player.vx = -Math.abs(player.vx) * 0.8;
+        }
+
+        if (player.y - player.radius < this.outer.y) {
+            player.y = this.outer.y + player.radius;
+            player.vy = Math.abs(player.vy) * 0.8;
+        }
+
+        if (player.y + player.radius > this.outer.y + this.outer.h) {
+            player.y = this.outer.y + this.outer.h - player.radius;
+            player.vy = -Math.abs(player.vy) * 0.8;
+        }
+
+        // Inner block
+        if (
+            player.x > this.inner.x &&
+            player.x < this.inner.x + this.inner.w &&
+            player.y > this.inner.y &&
+            player.y < this.inner.y + this.inner.h
+        ) {
+            player.vx *= -0.8;
+            player.vy *= -0.8;
+        }
+    }
+
     getWallNormal(x, y, r) {
 
         if (x - r < this.outer.x) return { x: 1, y: 0 };
@@ -54,17 +89,7 @@ export class Track {
             y > this.inner.y &&
             y < this.inner.y + this.inner.h
         ) {
-            const left = Math.abs(x - this.inner.x);
-            const right = Math.abs(x - (this.inner.x + this.inner.w));
-            const top = Math.abs(y - this.inner.y);
-            const bottom = Math.abs(y - (this.inner.y + this.inner.h));
-
-            const min = Math.min(left, right, top, bottom);
-
-            if (min === left) return { x: -1, y: 0 };
-            if (min === right) return { x: 1, y: 0 };
-            if (min === top) return { x: 0, y: -1 };
-            if (min === bottom) return { x: 0, y: 1 };
+            return { x: 0, y: -1 };
         }
 
         return null;
@@ -89,7 +114,6 @@ export class Track {
 
         if (Math.hypot(dx, dy) < 40) {
             player.checkpointIndex++;
-
             if (player.checkpointIndex >= this.checkpoints.length) {
                 player.checkpointIndex = 0;
                 player.score++;

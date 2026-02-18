@@ -1,5 +1,4 @@
 import { Player } from "./player.js";
-import { Missile } from "./missile.js";
 import { Track } from "./track.js";
 
 export class Game {
@@ -14,21 +13,20 @@ export class Game {
                 up: "KeyW",
                 left: "KeyA",
                 right: "KeyD",
-                shoot: "ShiftLeft"
+                shoot: "ShiftLeft",
+                drift: "KeyS"
             }),
             new Player(650, 300, "orange", {
                 up: "ArrowUp",
                 left: "ArrowLeft",
                 right: "ArrowRight",
-                shoot: "ShiftRight"
+                shoot: "ShiftRight",
+                drift: "ArrowDown"
             })
         ];
 
         this.missiles = [];
         this.keys = {};
-        this.gameOver = false;
-
-        this.countdown = 180;
 
         this.frameCount = 0;
         this.gameTime = 0;
@@ -39,19 +37,12 @@ export class Game {
 
     update() {
 
-        if (this.countdown > 0) {
-            this.countdown--;
-            return;
-        }
-
-        if (this.gameOver) return;
-
         this.frameCount++;
         this.gameTime = this.frameCount / 60;
 
         this.players.forEach(player => {
-            player.lapTime += 1/60;
 
+            player.lapTime += 1 / 60;
             player.update(this.keys, this.track);
 
             if (this.keys[player.controls.shoot]) {
@@ -63,10 +54,6 @@ export class Game {
                 player.completedLap = false;
                 player.lastLapTime = player.lapTime;
                 player.lapTime = 0;
-            }
-
-            if (player.score >= 10) {
-                this.gameOver = true;
             }
         });
 
@@ -92,7 +79,7 @@ export class Game {
 
         this.players.forEach((p, i) => {
             this.ctx.fillText(
-                `P${i+1}: ${p.score} | Lap: ${p.lapTime.toFixed(1)}s | Last: ${p.lastLapTime?.toFixed(1) ?? 0}s`,
+                `P${i+1}: ${p.score} | Lap: ${p.lapTime.toFixed(1)}s`,
                 20,
                 45 + i * 20
             );
